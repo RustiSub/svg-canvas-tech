@@ -4,14 +4,17 @@
     <meta charset="UTF-8">
     <title>RustiSub - Mouse House</title>
     <style>
-
+        body { /* ...or body.dialogShowing */
+            overflow: hidden;
+        }
     </style>
     <script inline src="svg.js"></script>
+    <script inline src="Vector.js"></script>
     <script inline src="game.js"></script>
 </head>
 <body id="body">
 
-<div id="container">
+<div id="container" class="container">
     <object type="image/svg+xml" data="house.svg" id="background"><!--fallback--></object>
 </div>
 
