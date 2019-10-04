@@ -18,8 +18,8 @@ window.addEventListener("load", function () {
   //var background = Snap('#background');
   var parent = Snap('#background');
 
-  var width = 1400;
-  var height = 400;
+  var width = 1920;
+  var height = 1080;
 
   parent.attr({width: width});
   parent.attr({height: height});
@@ -45,7 +45,10 @@ window.addEventListener("load", function () {
     zoomedViewBox.width = (width / zoomLevel);
     zoomedViewBox.height = (height / zoomLevel);
 
-    parent.attr({viewBox: zoomedViewBox});
+    parent.node.style.transform = 'scaleX(' + zoomLevel + ') scaleY(' + zoomLevel + ')';
+    parent.node.style.transformOrigin = point.x + 'px ' + point.y + 'px';
+
+    //parent.attr({viewBox: zoomedViewBox});
 
 /*    var border = parent.rect(point.x, point.y, 10, 10);
     border.attr({
@@ -72,7 +75,7 @@ window.addEventListener("load", function () {
   var mouseShape = parent.select('#mouseShape');
   var path1Group = parent.select('#path-1-group');
   var path1 = parent.select('#path-climb');
-  var pathWalk = parent.select('#path-walk');
+  var pathWalk = parent.select('#path-intro');
 
 //  var path1Length = path1.length();
   var path1Length = Snap.path.getTotalLength(pathWalk.attr("d"));
@@ -84,19 +87,44 @@ window.addEventListener("load", function () {
   var targetVector = new Vector(mouse.getBBox().cx, mouse.getBBox().cy);
 
   targetVector = applyTransform(targetVector, mouse.transform().globalMatrix);
-console.log(targetVector);
 
+  scale = 8;
 
+parent.node.animate([
+  {
+    transform: 'scaleY(' + 1 + ') scaleX(' + 1 + ')',
+    transformOrigin: '0px 600px',
+  },
+    {
+      transform: 'scaleY(' + scale + ') scaleX(' + scale+ ')',
+      transformOrigin: '0px 600px',
+    },
+    {
+      transform: 'scaleY(' + scale + ') scaleX(' + scale + ')',
+      transformOrigin: '800px 600px',
+    },
+    {
+      transform: 'scaleY(' + scale + ') scaleX(' + scale + ')',
+      transformOrigin: '800px 400px',
+    },
+    {
+      transform: 'scaleY(' + scale + ') scaleX(' + scale + ')',
+      transformOrigin: '0px 400px',
+    },
+    {
+      transform: 'scaleY(' + scale + ') scaleX(' + scale + ')',
+      transformOrigin: '0px 600px',
+    },
+  ],{
+    duration: 10000,
+    iterations: Infinity,
+  } );
 
-  Snap.animate(0, path1Length, function(val) {
+  /*Snap.animate(0, path1Length, function(val) {
     var pos = pathWalk.getPointAtLength(val);
-
-    cameraZoom(8, pos);
-/*    mouse.attr({
-      transform: 't' + [pos.x, pos.y] +
-          'r' + (pos.alpha - 90)
-    });*/
-  }, 4000, mina.easeinout);
+    targetVector = applyTransform(pos, pathWalk.transform().globalMatrix);
+    cameraZoom(4, pos);
+  }, 10000);*/
 
   /*
        function randomColor()

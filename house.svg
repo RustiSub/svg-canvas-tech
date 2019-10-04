@@ -1565,11 +1565,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.99999999"
-     inkscape:cx="487.18075"
-     inkscape:cy="136.95318"
+     inkscape:zoom="0.17677669"
+     inkscape:cx="1081.0245"
+     inkscape:cy="1121.9152"
      inkscape:document-units="mm"
-     inkscape:current-layer="paths"
+     inkscape:current-layer="path-1-group"
      showgrid="false"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -2027,6 +2027,12 @@
            inkscape:connector-curvature="0"
            inkscape:label="path-climb"
            sodipodi:nodetypes="csccccccc" />
+        <path
+           style="fill:none;stroke:#fbff00;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+           d="m 96.144533,470.97429 654.061977,4.49014 1.49672,-248.45375 -675.015917,-7.48355 z"
+           id="path-intro"
+           inkscape:connector-curvature="0"
+           inkscape:label="path-intro" />
       </g>
     </g>
     <g
