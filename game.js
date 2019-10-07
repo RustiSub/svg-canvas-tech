@@ -3,60 +3,44 @@ window.addEventListener("load", function () {
 
   var mouseMovement = 0;
 
-  /*  var background = Snap('#background');
-
-    background.attr("viewBox").x = 93;
-
-    var cameraViewBox = background.attr("viewBox");
-
-    console.log(cameraViewBox);
-    cameraViewBox.x = 93;
-    console.log(cameraViewBox);
-
-    background.attr({viewBox: cameraViewBox});*/
-
-  //var background = Snap('#background');
   var parent = Snap('#background');
 
-  var width = 1920;
-  var height = 1080;
+  var width = 1400;
+  var height = 400;
 
-  parent.attr({width: width});
+  var zoom = 1;
+  var frameZoom = 1;
+
+  var parentRatio = parent.getBBox().width / parent.getBBox().height;
+
   parent.attr({height: height});
+  parent.attr({width: parentRatio * height});
 
-  //var sceneParent = parent.nested();
+  var frameWidth = parent.getBBox().width;
+  var frameHeight = parent.getBBox().height;
 
-  var cameraViewBox = parent.attr("viewBox");
+  width = parent.attr('width');
+  height = parent.attr('height');
 
-  cameraViewBox.x = 0;
-  cameraViewBox.y = 0;
-  cameraViewBox.width = width;
-  cameraViewBox.height = height;
-  parent.attr({viewBox: cameraViewBox});
+  frameZoom = frameWidth / width;
+
+  var absoluteOrigin = new Vector(
+      (frameWidth / 2) / frameZoom,
+      (frameHeight / 2) / frameZoom,
+  );
+
+  /*parent.attr({viewBox: cameraViewBox});*/
 
   function cameraZoom(zoomLevel, point) {
     //center of the current viewbox rectangle
     point = point || new Vector(width / 2, height / 2);
 
-    var zoomedViewBox = parent.attr("viewBox");
-
-    zoomedViewBox.x = point.x - ((width / zoomLevel) / 2);
-    zoomedViewBox.y = point.y - ((height / zoomLevel) / 2);
-    zoomedViewBox.width = (width / zoomLevel);
-    zoomedViewBox.height = (height / zoomLevel);
+    //var circle = parent.circle(point.x, point.y, 10);
 
     parent.node.style.transform = 'scaleX(' + zoomLevel + ') scaleY(' + zoomLevel + ')';
-    parent.node.style.transformOrigin = point.x + 'px ' + point.y + 'px';
+    parent.node.style.transform += ' translateX(' + point.x + 'px) translateY(' + point.y + 'px)';
 
-    //parent.attr({viewBox: zoomedViewBox});
-
-/*    var border = parent.rect(point.x, point.y, 10, 10);
-    border.attr({
-      fill: "#bada55",
-      stroke: "#000",
-      strokeWidth: 5,
-      opacity: 0.5
-    });*/
+    //parent.node.style.transformOrigin = point.x + 'px ' + point.y + 'px';
   }
 
   function applyTransform(point, matrix) {
@@ -67,7 +51,11 @@ window.addEventListener("load", function () {
     point.y += matrix.f;
 
     return point;
+
   }
+  var testGlobe = parent.select('#testGlobe');
+
+  //cameraZoom(4, testVector);
 
   //Setup Mouse on Path
 
@@ -75,56 +63,24 @@ window.addEventListener("load", function () {
   var mouseShape = parent.select('#mouseShape');
   var path1Group = parent.select('#path-1-group');
   var path1 = parent.select('#path-climb');
-  var pathWalk = parent.select('#path-intro');
+  var pathWalk = parent.select('#path-climb');
 
 //  var path1Length = path1.length();
   var path1Length = Snap.path.getTotalLength(pathWalk.attr("d"));
 
   var mouseAnimationLength = 10000;
 
-  //mouse.appendTo(path1Group);
+  cameraZoom(zoom, absoluteOrigin);
 
-  var targetVector = new Vector(mouse.getBBox().cx, mouse.getBBox().cy);
+  Snap.animate(0, path1Length, function(val) {
+/*    var pos = pathWalk.getPointAtLength(val);
 
-  targetVector = applyTransform(targetVector, mouse.transform().globalMatrix);
+    pos = applyTransform(pos, pathWalk.transform().globalMatrix);
 
-  scale = 8;
+    //parent.circle(pos.x, pos.y, 10);
 
-parent.node.animate([
-  {
-    transform: 'scaleY(' + 1 + ') scaleX(' + 1 + ')',
-    transformOrigin: '0px 600px',
-  },
-    {
-      transform: 'scaleY(' + scale + ') scaleX(' + scale+ ')',
-      transformOrigin: '0px 600px',
-    },
-    {
-      transform: 'scaleY(' + scale + ') scaleX(' + scale + ')',
-      transformOrigin: '800px 600px',
-    },
-    {
-      transform: 'scaleY(' + scale + ') scaleX(' + scale + ')',
-      transformOrigin: '800px 400px',
-    },
-    {
-      transform: 'scaleY(' + scale + ') scaleX(' + scale + ')',
-      transformOrigin: '0px 400px',
-    },
-    {
-      transform: 'scaleY(' + scale + ') scaleX(' + scale + ')',
-      transformOrigin: '0px 600px',
-    },
-  ],{
-    duration: 10000,
-    iterations: Infinity,
-  } );
-
-  /*Snap.animate(0, path1Length, function(val) {
-    var pos = pathWalk.getPointAtLength(val);
-    targetVector = applyTransform(pos, pathWalk.transform().globalMatrix);
-    cameraZoom(4, pos);
-  }, 10000);*/
+    cameraZoom(10, pos);*/
+  }, 10000);
 
   /*
        function randomColor()
