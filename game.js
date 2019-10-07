@@ -1,47 +1,30 @@
 window.addEventListener("load", function () {
   var Vector = wrect.Physics.Vector;
 
-  var mouseMovement = 0;
-
   var parent = Snap('#background');
 
-  var width = 1400;
-  var height = 400;
+  var width = parent.getBBox().width;
+  var height = parent.getBBox().height;
 
-  var zoom = 1;
-  var frameZoom = 1;
-
-  var parentRatio = parent.getBBox().width / parent.getBBox().height;
-
+  parent.attr({width: 1000});
   parent.attr({height: height});
-  parent.attr({width: parentRatio * height});
 
-  var frameWidth = parent.getBBox().width;
-  var frameHeight = parent.getBBox().height;
-
-  width = parent.attr('width');
-  height = parent.attr('height');
-
-  frameZoom = frameWidth / width;
-
-  var absoluteOrigin = new Vector(
-      (frameWidth / 2) / frameZoom,
-      (frameHeight / 2) / frameZoom,
-  );
-
-  /*parent.attr({viewBox: cameraViewBox});*/
+  var absoluteOrigin = new Vector(parent.getBBox().width / 2, parent.getBBox().height / 2);
 
   function cameraZoom(zoomLevel, point) {
     //center of the current viewbox rectangle
     point = point || new Vector(width / 2, height / 2);
 
-    //var circle = parent.circle(point.x, point.y, 10);
+    var translateVector = absoluteOrigin.subtract(point);
 
     parent.node.style.transform = 'scaleX(' + zoomLevel + ') scaleY(' + zoomLevel + ')';
-    parent.node.style.transform += ' translateX(' + point.x + 'px) translateY(' + point.y + 'px)';
-
-    //parent.node.style.transformOrigin = point.x + 'px ' + point.y + 'px';
+    parent.node.style.transform += ' translateX(' + translateVector.x + 'px) translateY(' + translateVector.y + 'px)';
   }
+
+  var targetPointVector = new Vector(0, absoluteOrigin.y);
+
+
+  //cameraZoom(10, targetPointVector);
 
   function applyTransform(point, matrix) {
     point.x *= matrix.a;
@@ -51,35 +34,18 @@ window.addEventListener("load", function () {
     point.y += matrix.f;
 
     return point;
-
   }
-  var testGlobe = parent.select('#testGlobe');
-
-  //cameraZoom(4, testVector);
 
   //Setup Mouse on Path
-
-  var mouse = parent.select('#mouse');
-  var mouseShape = parent.select('#mouseShape');
-  var path1Group = parent.select('#path-1-group');
-  var path1 = parent.select('#path-climb');
-  var pathWalk = parent.select('#path-climb');
-
-//  var path1Length = path1.length();
+  var pathWalk = parent.select('#path-trip');
   var path1Length = Snap.path.getTotalLength(pathWalk.attr("d"));
 
   var mouseAnimationLength = 10000;
 
-  cameraZoom(zoom, absoluteOrigin);
-
   Snap.animate(0, path1Length, function(val) {
-/*    var pos = pathWalk.getPointAtLength(val);
+    var pos = pathWalk.getPointAtLength(val);
 
-    pos = applyTransform(pos, pathWalk.transform().globalMatrix);
-
-    //parent.circle(pos.x, pos.y, 10);
-
-    cameraZoom(10, pos);*/
+    cameraZoom(4, pos);
   }, 10000);
 
   /*
