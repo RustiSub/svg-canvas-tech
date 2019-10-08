@@ -6,7 +6,7 @@ window.addEventListener("load", function () {
   var width = parent.getBBox().width;
   var height = parent.getBBox().height;
 
-  parent.attr({width: 1000});
+  parent.attr({width: 1400});
   parent.attr({height: height});
 
   var absoluteOrigin = new Vector(parent.getBBox().width / 2, parent.getBBox().height / 2);
@@ -38,206 +38,113 @@ window.addEventListener("load", function () {
 
   //Setup Mouse on Path
   var pathWalk = parent.select('#path-trip');
+  var pathOffsetTest = parent.select('#path-offset-test');
   var path1Length = Snap.path.getTotalLength(pathWalk.attr("d"));
 
   var mouseAnimationLength = 10000;
 
-  Snap.animate(0, path1Length, function(val) {
-    var pos = pathWalk.getPointAtLength(val);
+  var mouse = parent.select('#simpleMouse');
+  var mouseShape = parent.select('#mouseShape');
 
-    cameraZoom(4, pos);
-  }, 10000);
+  mouse.transform('');
 
-  /*
-       function randomColor()
-       {
-         return "#000000".replace(/0/g,function(){return (~~(Math.random()*16)).toString(16);});
-       }
+  var mouseVector = new Vector(mouse.getBBox().cx, mouse.getBBox().cy);
 
-       var snapZones = [];
+  var pathStartVector = new Vector(pathOffsetTest.getPointAtLength(0).x, pathOffsetTest.getPointAtLength(0).y);
+  var moveMouseVector = pathStartVector.subtract(mouseVector);
 
-       function addPathSnapZones(path) {
-         var startPoint = path.pointAt(0);
-         var endPoint = path.pointAt(path.length());
+  //mouse.transform('translate(' + moveMouseVector.x + ',' + moveMouseVector.y + ')');
 
-         let color = randomColor();
-         snapZones.push(
-           path.parent()
-             .circle(10)
-             .fill({ color: color})
-             .move(startPoint.x - (10 /2), startPoint.y - (10 /2))
-         )
-         ;
+  //mouse.node.style.transform = 'translateX(' + moveMouseVector.x + 'px) translateY(' + moveMouseVector.y + 'px)';
 
-         snapZones.push(
-             path.parent()
-                 .circle(10)
-                 .fill({ color: color})
-                 .move(endPoint.x - (10 /2), endPoint.y - (10 /2))
-         )
-         ;
-       }
+  cameraZoom(10, new Vector(mouse.getBBox().cx, mouse.getBBox().cy));
+  //cameraZoom(10, new Vector(0, height));
 
-       addPathSnapZones(pathWalk);
-       addPathSnapZones(path1);
+  //offset-path: path("M 73.1972 533.559 L 104.153 560.811 L 86.4764 595.327 L 52.1107 558.165 Z");
 
-       var previousPoint;
-       var mouseAnimation = mouse
-           .animate(mouseAnimationLength, '-')
-           .during(function (pos, morph, eased, situation) {
-             var p = pathWalk.pointAt((eased) * pathWalk.length());
-             var rotation = 0;
+  //mouse.attr({cx: 73.1972});
+  //mouse.attr({cy: 533.559});
 
-             if (previousPoint) {
-               var p1 = p;
-               var p2 = previousPoint;
+  var animation;
+  console.log(parent);
+  console.log(parent.transform());
 
-               var angle = Math.atan2((p2.y - p1.y),
-                   (p2.x - p1.x));
+  console.log(pathOffsetTest);
 
-               rotation = angle * (180 / Math.PI);
-             }
+  var aStart = new Vector(0 ,0);
 
-             mouse.translate(
-                 p.x - ((mouse.node.getBBox().x + (mouse.node.getBBox().width / 2)) * mouse.transform().scaleX),
-                 p.y - ((mouse.node.getBBox().y + (mouse.node.getBBox().height / 2)) * mouse.transform().scaleY)
-             );
+  console.log(aStart);
+  console.log(applyTransform(aStart, parent.transform().globalMatrix));
 
-             mouseShape.rotate(rotation);
+  function mouseWalk() {
+    //mouse.node.style = 'offset-path: path("' + pathOffsetTest.attr('d') + '")';
+    mouse.node.style = 'offset-path: path("m 0,0 100,0")';
 
-             var actualVector = undoTransform(mouse, new Vector(mouseShape.cx(), mouseShape.cy()));
+    animation = mouse.node.animate([
+      { offsetDistance: 0 },
+      { offsetDistance: '100%' }
+    ], {
+      duration: 1000,
+      easing: 'linear',
+      iterations: 1,
+      fill: 'both'
+    });
+  }
 
-             cameraZoom(8, actualVector);
+  //mouseWalk();
 
-             previousPoint = p;
-           }).pause()
-       ;
+  /*  Snap.animate(0, path1Length, function (val) {
+      var pos = pathWalk.getPointAtLength(val);
 
-       // speed = x units / 1ms
-       var movementSpeed = 75;
-       var walkMaxMovementSpeed = 75;
-       var runMaxMovementSpeed = 150;
-       var maxMovementSpeed = walkMaxMovementSpeed;
+      cameraZoom(4, pos);
+    }, 10000);*/
 
-       background.addEventListener('keydown',
-           function (event) {
-             switch (event.keyCode) {
-               case 69:
-                 break;
-               case 16:
-                 maxMovementSpeed = runMaxMovementSpeed;
-                 break;
-               case 37:
-                 mouseMovement -= movementSpeed;
-                 break;
-               case 39:
-                 mouseMovement += movementSpeed;
-                 break;
-               case 38:
-                 break;
-               case 40:
-                 mouseMovement += movementSpeed;
-                 break;
-               case 90:
+/*  parent.node.animate([
+    {
+      transform: 'scaleY(' + 1 + ') scaleX(' + 1 + ')',
+      transformOrigin: '0px 600px',
+    },
+    {
+      transform: 'scaleY(' + scale + ') scaleX(' + scale + ')',
+      transformOrigin: '0px 600px',
+    },
+    {
+      transform: 'scaleY(' + scale + ') scaleX(' + scale + ')',
+      transformOrigin: '800px 600px',
+    },
+    {
+      transform: 'scaleY(' + scale + ') scaleX(' + scale + ')',
+      transformOrigin: '800px 400px',
+    },
+    {
+      transform: 'scaleY(' + scale + ') scaleX(' + scale + ')',
+      transformOrigin: '0px 400px',
+    },
+    {
+      transform: 'scaleY(' + scale + ') scaleX(' + scale + ')',
+      transformOrigin: '0px 600px',
+    },
+  ], {
+    duration: 10000,
+    iterations: Infinity,
+  });*/
 
-                 break;
-               case 83:
+  function update(progress) {
+    //console.log(animation);
+    if (animation && animation.playState === 'running') {
+      //console.log(animation.effect.target.style);
+    }
+  }
 
-                 break;
-               case 32:
+  function loop(timestamp) {
+    var progress = timestamp - lastRender;
 
-                 break;
-             }
-           }
-       );
+    update(progress);
 
-       background.addEventListener('keyup',
-           function (event) {
-             //event.stopPropagation();
-             //event.preventDefault();
+    lastRender = timestamp;
+    window.requestAnimationFrame(loop);
+  }
 
-             switch (event.keyCode) {
-               case 69:
-                 break;
-               case 16:
-                 maxMovementSpeed = walkMaxMovementSpeed;
-                 break;
-               case 37:
-                 mouseMovement = 0;
-                 // nestedScene1Parent.x(nestedScene1Parent.x() + movement);
-                 // nestedScene2Parent.x(nestedScene2Parent.x() + movement);
-                 break;
-               case 39:
-                 mouseMovement = 0;
-
-                 // nestedScene1Parent.x(nestedScene1Parent.x() - movement);
-                 // nestedScene2Parent.x(nestedScene2Parent.x() - movement);
-                 break;
-               case 38:
-                 // nestedScene1Parent.y(nestedScene1Parent.y() + movement);
-                 // nestedScene2Parent.y(nestedScene2Parent.y() + movement);
-                 break;
-               case 40:
-                 // nestedScene1Parent.y(nestedScene1Parent.y() - movement);
-                 // nestedScene2Parent.y(nestedScene2Parent.y() - movement);
-                 break;
-               case 90:
-
-                 break;
-               case 83:
-
-                 break;
-               case 32:
-
-                 break;
-             }
-           }
-       );
-
-       // Check if current anchor hits snap zones
-       function checkSnapZoneOverlap(anchor)
-       {
-         snapZones.forEach(function(zone, index) {
-           //calculate distance vector between anchor and snapZone
-
-           var zoneVector = undoTransform(zone, new Vector(zone.cx(), zone.cy()));
-           var radiusVector = undoTransform(zone, new Vector(zone.x(), zone.cy()));
-           var radius = undoTransform(zone, new Vector(zone.width(), 0)).len();
-
-           if (anchor.distance(zoneVector) < zoneVector.distance(radiusVector)) {
-             zone.style({opacity: 0.75});
-           } else {
-             zone.style({opacity: 0.50});
-           }
-         });
-       }
-
-       // progress = time passed since last loop
-       function update(progress) {
-         mouseMovement = mouseMovement > maxMovementSpeed ? maxMovementSpeed : mouseMovement;
-         mouseMovement = mouseMovement < maxMovementSpeed * -1 ? maxMovementSpeed * -1 : mouseMovement;
-
-         var distanceToMoveThisLoop = (progress / 1000) * mouseMovement;
-
-         if (distanceToMoveThisLoop !== 0) {
-           mouseAnimation.at(((mouseAnimation.pos * path1Length) + distanceToMoveThisLoop) / path1Length);
-
-           var mouseVector = undoTransform(mouse, new Vector(mouseShape.cx(), mouseShape.cy()));
-
-           checkSnapZoneOverlap(mouseVector);
-         }
-       }
-
-       function loop(timestamp) {
-         var progress = timestamp - lastRender;
-
-         update(progress);
-
-         lastRender = timestamp;
-         window.requestAnimationFrame(loop);
-       }
-
-       var lastRender = 0;
-       window.requestAnimationFrame(loop);
-       */
+  var lastRender = 0;
+  window.requestAnimationFrame(loop);
 });
