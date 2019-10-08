@@ -1,6 +1,7 @@
 window.addEventListener("load", function () {
   var Vector = wrect.Physics.Vector;
 
+  var background = document.getElementById('background').contentDocument;
   var parent = Snap('#background');
 
   var width = parent.getBBox().width;
@@ -20,9 +21,6 @@ window.addEventListener("load", function () {
     parent.node.style.transform = 'scaleX(' + zoomLevel + ') scaleY(' + zoomLevel + ')';
     parent.node.style.transform += ' translateX(' + translateVector.x + 'px) translateY(' + translateVector.y + 'px)';
   }
-
-  var targetPointVector = new Vector(0, absoluteOrigin.y);
-
 
   //cameraZoom(10, targetPointVector);
 
@@ -49,23 +47,19 @@ window.addEventListener("load", function () {
   mouse.transform('');
 
   var mouseVector = new Vector(mouse.getBBox().cx, mouse.getBBox().cy);
-
-  var pathStartVector = new Vector(pathOffsetTest.getPointAtLength(0).x, pathOffsetTest.getPointAtLength(0).y);
   var animationOriginVector = new Vector(0, 0);
   var moveMouseVector = animationOriginVector.subtract(mouseVector);
   mouse.transform('translate(' + moveMouseVector.x + ',' + moveMouseVector.y + ')');
   mouse.node.style['will-change'] = 'transform';
-//will-change: transform
-  var animation;
+
+  var walkAnimation;
 
   let duration = 10000;
 
   function mouseWalk() {
     mouse.node.style = 'offset-path: path("' + pathWalk.attr('d') + '")';
-    //mouse.node.style = 'offset-path: path("m 29.855549,559.21177 0,0")';
 
-
-    animation = mouse.node.animate([
+    walkAnimation = mouse.node.animate([
       { offsetDistance: 0 },
       { offsetDistance: '100%' }
     ], {
@@ -74,27 +68,87 @@ window.addEventListener("load", function () {
       iterations: Infinity,
       fill: 'both'
     });
+
+    walkAnimation.pause();
   }
 
   mouseWalk();
 
-  //cameraZoom(10, new Vector(207.2286524689752,123.67886993388154));
-  //cameraZoom(1, new Vector(pathWalk.getPointAtLength(0).x, pathWalk.getPointAtLength(0).y));
+  //Movement
+  var mouseMovement = 0;
+  var movementSpeed = 1;
+  var walkMaxMovementSpeed = 2;
+  var runMaxMovementSpeed = 5;
+  var maxMovementSpeed = walkMaxMovementSpeed;
 
-  var frequency = 0;
+  var running = false;
+
+  background.addEventListener('keydown',
+      function (event) {
+        switch (event.keyCode) {
+          case 16: //shift
+            running = true;
+            break;
+          case 37: //arrow left
+            mouseMovement -= movementSpeed;
+            break;
+          case 39: //arrow right
+            mouseMovement += movementSpeed;
+            break;
+        }
+      }
+  );
+
+  background.addEventListener('keyup',
+      function (event) {
+        switch (event.keyCode) {
+          case 16: //shift
+            running = false;
+            break;
+          case 37: //arrow left
+            mouseMovement = 0;
+            break;
+          case 39: //arrow right
+            mouseMovement = 0;
+            break;
+        }
+      }
+  );
+
+  function speedToPosition(speed)
+  {
+    var iteration = Math.floor(walkAnimation.currentTime / duration);
+
+    var currentPosition = ((walkAnimation.currentTime / duration) - iteration) * path1Length;
+
+    currentPosition += speed;
+
+    walkAnimation.currentTime = (currentPosition / path1Length) * duration;
+
+    return currentPosition / path1Length;
+  }
+
+  function moveCamera(pos)
+  {
+    var pathPosition = pos * path1Length;
+
+    var cameraVector = new Vector(pathWalk.getPointAtLength(pathPosition).x, pathWalk.getPointAtLength(pathPosition).y);
+
+    cameraZoom(8, cameraVector);
+  }
 
   function update(progress) {
-    frequency += progress;
+    if (running) {
+      maxMovementSpeed = runMaxMovementSpeed;
+    } else {
+      maxMovementSpeed = walkMaxMovementSpeed;
+    }
 
-    if (animation && animation.playState === 'running') {
+    mouseMovement = mouseMovement > maxMovementSpeed ? maxMovementSpeed : mouseMovement;
+    mouseMovement = mouseMovement < maxMovementSpeed * -1 ? maxMovementSpeed * -1 : mouseMovement;
 
-      var iteration = Math.floor(animation.currentTime / duration);
-
-      var pos = ((animation.currentTime / duration) - iteration) * path1Length;
-
-      var cameraVector = new Vector(pathWalk.getPointAtLength(pos).x, pathWalk.getPointAtLength(pos).y);
-
-      cameraZoom(6, cameraVector);
+    if (mouseMovement !== 0) {
+      moveCamera(speedToPosition(mouseMovement));
     }
   }
 
