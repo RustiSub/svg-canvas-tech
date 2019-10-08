@@ -6,7 +6,7 @@ window.addEventListener("load", function () {
   var width = parent.getBBox().width;
   var height = parent.getBBox().height;
 
-  parent.attr({width: 1900});
+  parent.attr({width: 1400});
   parent.attr({height: height});
 
   var absoluteOrigin = new Vector(parent.getBBox().width / 2, parent.getBBox().height / 2);
@@ -54,20 +54,9 @@ window.addEventListener("load", function () {
   var animationOriginVector = new Vector(0, 0);
   var moveMouseVector = animationOriginVector.subtract(mouseVector);
   mouse.transform('translate(' + moveMouseVector.x + ',' + moveMouseVector.y + ')');
-
-
+  mouse.node.style['will-change'] = 'transform';
+//will-change: transform
   var animation;
-
-  var aStart = new Vector(0 ,0);
-
-
-  console.log(pathOffsetTest.attr('d'));
-
-  // pathOffsetTest.transform('translateX(100px)');
-
-  console.log(pathOffsetTest.attr('d'));
-
-  console.log(pathWalk.attr('d') );
 
   let duration = 10000;
 
@@ -92,14 +81,11 @@ window.addEventListener("load", function () {
   //cameraZoom(10, new Vector(207.2286524689752,123.67886993388154));
   //cameraZoom(1, new Vector(pathWalk.getPointAtLength(0).x, pathWalk.getPointAtLength(0).y));
 
-  console.log(mouse.getBBox());
-  console.log(mouse.transform());
-  console.log(new Vector(mouse.getBBox().cx, mouse.getBBox().cy));
-  console.log(applyTransform(new Vector(mouse.getBBox().cx, mouse.getBBox().cy), mouse.transform().localMatrix));
-  console.log(mouse.transform());
+  var frequency = 0;
 
   function update(progress) {
-    //console.log(animation);
+    frequency += progress;
+
     if (animation && animation.playState === 'running') {
 
       var iteration = Math.floor(animation.currentTime / duration);
@@ -108,7 +94,7 @@ window.addEventListener("load", function () {
 
       var cameraVector = new Vector(pathWalk.getPointAtLength(pos).x, pathWalk.getPointAtLength(pos).y);
 
-      cameraZoom(10, cameraVector);
+      cameraZoom(6, cameraVector);
     }
   }
 
