@@ -1565,9 +1565,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.1767767"
-     inkscape:cx="1965.1259"
-     inkscape:cy="560.40355"
+     inkscape:zoom="0.70710678"
+     inkscape:cx="487.28149"
+     inkscape:cy="388.63754"
      inkscape:document-units="mm"
      inkscape:current-layer="houseSvg"
      showgrid="false"
@@ -3559,16 +3559,16 @@
      sodipodi:nodetypes="cccccccc" />
   <path
      style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     d="m 29.855549,570.32427 45.141613,0.0116"
+     d="m 29.855549,559.21177 31.527686,0.008 52.209085,-64.93883 194.13024,66.99858"
      id="path-offset-test"
      inkscape:connector-curvature="0"
      inkscape:label="path-offset-test"
-     sodipodi:nodetypes="cc" />
+     sodipodi:nodetypes="cccc" />
   <ellipse
      style="opacity:1;vector-effect:none;fill:#ff0a04;fill-opacity:1;stroke:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
      id="simpleMouse"
-     cx="87.515694"
-     cy="476.0578"
+     cx="118.61422"
+     cy="455.19238"
      rx="6.3610153"
      ry="11.225321"
      inkscape:label="simpleMouse" />
