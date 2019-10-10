@@ -4,7 +4,7 @@ window.addEventListener("load", function () {
   var background = document.getElementById('background').contentDocument;
   var parent = Snap('#background');
 
-  var width = parent.getBBox().width;
+  var width = 1400;
   var height = parent.getBBox().height;
 
   parent.attr({width: width});
@@ -54,16 +54,13 @@ window.addEventListener("load", function () {
 
     cameraPos = point;
 
-    var translateVector = absoluteOrigin.subtract(point);
-
-    //translateVector.x += (width / 2) / zoom;
-    //translateVector.y += (height / 2) / zoom;
+    point = point.multiply(-1);
 
     parent.node.style.transform = 'scaleX(' + zoomLevel + ') scaleY(' + zoomLevel + ')';
-    parent.node.style.transform += ' translateX(' + translateVector.x + 'px) translateY(' + translateVector.y + 'px)';
+    parent.node.style.transform += ' translateX(' + point.x + 'px) translateY(' + point.y + 'px)';
     parent.node.style.transformOrigin = 'top left';
 
-    parentTransform.translate = new Vector(translateVector.x, translateVector.y);
+    parentTransform.translate = new Vector(point.x, point.y);
     parentTransform.scale = new Vector(zoomLevel, zoomLevel);
   }
 
@@ -95,7 +92,6 @@ window.addEventListener("load", function () {
   var animationOriginVector = new Vector(0, 0);
   var moveMouseVector = animationOriginVector.subtract(mouseVector);
   mouse.transform('translate(' + moveMouseVector.x + ',' + moveMouseVector.y + ')');
-  //mouse.node.style['will-change'] = 'transform';
 
   var walkAnimation;
 
@@ -169,7 +165,14 @@ window.addEventListener("load", function () {
     viewBox.x2 = viewBox.x + viewBox.width;
   }
 
-  var zoom = 3;
+  var zoom = 6;
+  let cameraRecenterEase = 0.04;
+  let deadZoneSize = width * 0.01;
+
+  var moveCameraVector = new Vector(0, 0);
+
+  //Player
+  var positionVector = new Vector(0, 0);
 
   function speedToPosition(speed)
   {
@@ -182,33 +185,46 @@ window.addEventListener("load", function () {
 
     walkAnimation.currentTime = (currentPosition / path1Length) * duration;
 
-    var positionVector = new Vector(pathWalk.getPointAtLength(currentPosition).x, pathWalk.getPointAtLength(currentPosition).y);
+    positionVector = new Vector(pathWalk.getPointAtLength(currentPosition).x, pathWalk.getPointAtLength(currentPosition).y);
     var actualMoveDistance = positionVector.subtract(previousPositionVector);
 
     updateViewBox();
 
-    positionVector.x = positionVector.x * parentTransform.scale.x;
-    positionVector.y = positionVector.y * parentTransform.scale.y;
+    positionVector.x = (positionVector.x * parentTransform.scale.x) + (parentTransform.translate.x * zoom);
+    positionVector.y = (positionVector.y * parentTransform.scale.y) + (parentTransform.translate.y * zoom);
 
-    var deadzone = {
-      right: (width - (20 * zoom)),
-      left: (20) * zoom,
-      bottom: (height - (20 * zoom)),
-      top: (20) * zoom,
+    var deadZone = {
+      right: (width - (deadZoneSize * zoom)),
+      left: (deadZoneSize) * zoom,
+      bottom: (height - (deadZoneSize * zoom)),
+      top: (deadZoneSize) * zoom,
     };
 
-    if ((positionVector.x + parentTransform.translate.x * zoom > deadzone.right && actualMoveDistance.x > 0) || positionVector.x + parentTransform.translate.x * zoom < deadzone.left && actualMoveDistance.x < 0) {
-      cameraZoom(zoom, cameraPos.add(new Vector(actualMoveDistance.x, 0)));
+    var pushDeadzone = false;
+
+    if ((positionVector.x > deadZone.right && actualMoveDistance.x > 0) || positionVector.x < deadZone.left && actualMoveDistance.x < 0) {
+      cameraPos = cameraPos.add(new Vector(actualMoveDistance.x, 0));
+      pushDeadzone = true;
     }
 
-    if ((positionVector.y + parentTransform.translate.y * zoom > deadzone.bottom && actualMoveDistance.y > 0) || (positionVector.y + parentTransform.translate.y * zoom < deadzone.top && actualMoveDistance.y < 0)) {
-      cameraZoom(zoom, cameraPos.add(new Vector(0, actualMoveDistance.y)));
+    if ((positionVector.y > deadZone.bottom && actualMoveDistance.y > 0) || (positionVector.y < deadZone.top && actualMoveDistance.y < 0)) {
+      cameraPos = cameraPos.add(new Vector(0, actualMoveDistance.y));
+      pushDeadzone = true;
+    }
+
+    cameraZoom(zoom, cameraPos);
+
+    let playerPosition = new Vector(
+        pathWalk.getPointAtLength(currentPosition).x - (width / zoom / 2),
+        pathWalk.getPointAtLength(currentPosition).y - ((height * 1.5) / zoom / 2)
+    );
+
+    if (Math.abs(playerPosition.subtract(cameraPos).len()) > deadZone.right * 0.01 ||  pushDeadzone) {
+      moveCameraVector = playerPosition.subtract(cameraPos);
     }
 
     return currentPosition / path1Length;
   }
-
-  var cameraVector = new Vector(0, 0);
 
   function moveCamera(pos)
   {
@@ -219,11 +235,9 @@ window.addEventListener("load", function () {
     cameraZoom(zoom, cameraVector);
   }
 
-  var test = parent.select('#test123');
-  // console.log(test.getBBox());
+  cameraZoom(zoom, absoluteOrigin.add(new Vector(0, 550)));
 
-  //moveCamera(speedToPosition(mouseMovement));
-  cameraZoom(zoom, absoluteOrigin.add(new Vector(0, 400)));
+  //moveCameraVector = new Vector(10, 0);
 
   function update(progress) {
     if (running) {
@@ -237,7 +251,20 @@ window.addEventListener("load", function () {
 
     if (mouseMovement !== 0) {
       speedToPosition(mouseMovement);
-      //moveCamera();
+    }
+
+    if (moveCameraVector.len() !== 0) {
+      var partialMoveCameraVector =  new Vector(moveCameraVector.x, moveCameraVector.y);
+      partialMoveCameraVector = partialMoveCameraVector.multiply(cameraRecenterEase);
+
+      moveCameraVector = moveCameraVector.subtract(partialMoveCameraVector);
+
+      moveCameraVector.x = Math.abs(moveCameraVector.x) <= 0.1 ? 0 : moveCameraVector.x;
+      moveCameraVector.y = Math.abs(moveCameraVector.y) <= 0.1 ? 0 : moveCameraVector.y;
+
+      cameraPos = cameraPos.add(partialMoveCameraVector);
+
+      cameraZoom(zoom, cameraPos);
     }
   }
 
