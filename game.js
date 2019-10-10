@@ -169,7 +169,7 @@ window.addEventListener("load", function () {
     viewBox.x2 = viewBox.x + viewBox.width;
   }
 
-  var zoom = 5;
+  var zoom = 3;
 
   function speedToPosition(speed)
   {
@@ -185,10 +185,6 @@ window.addEventListener("load", function () {
     var positionVector = new Vector(pathWalk.getPointAtLength(currentPosition).x, pathWalk.getPointAtLength(currentPosition).y);
     var actualMoveDistance = positionVector.subtract(previousPositionVector);
 
-    // console.log();
-
-    //moveCamera(currentPosition / path1Length);
-
     updateViewBox();
 
     positionVector.x = positionVector.x * parentTransform.scale.x;
@@ -201,30 +197,13 @@ window.addEventListener("load", function () {
       top: (20) * zoom,
     };
 
-    //console.log(positionVector.x, parentTransform.translate.x);
-
-    //console.log(positionVector.x, parentTransform.translate.x, width * zoom, (width * zoom) - parentTransform.translate.x);
-
-    // console.log(positionVector.x, width, parentTransform.translate.x);
-
     if ((positionVector.x + parentTransform.translate.x * zoom > deadzone.right && actualMoveDistance.x > 0) || positionVector.x + parentTransform.translate.x * zoom < deadzone.left && actualMoveDistance.x < 0) {
       cameraZoom(zoom, cameraPos.add(new Vector(actualMoveDistance.x, 0)));
     }
 
-    //console.log(positionVector.y + parentTransform.translate.y * zoom, deadzone.bottom, deadzone.top);
-
     if ((positionVector.y + parentTransform.translate.y * zoom > deadzone.bottom && actualMoveDistance.y > 0) || (positionVector.y + parentTransform.translate.y * zoom < deadzone.top && actualMoveDistance.y < 0)) {
       cameraZoom(zoom, cameraPos.add(new Vector(0, actualMoveDistance.y)));
     }
-
-    //moveCamera(currentPosition / path1Length, {x: false, y: false}, speed);
-
-    //moveCamera(currentPosition / path1Length);
-
-/*    if ((positionVector.x > deadzone && speed > 0) || (positionVector.x - parentTransform.translate.x < deadzoneLeft && speed < 0)) {
-      //moveCamera(currentPosition / path1Length);
-      cameraZoom(zoom, cameraPos.add(new Vector(speed, 0)));
-    }*/
 
     return currentPosition / path1Length;
   }
@@ -244,7 +223,7 @@ window.addEventListener("load", function () {
   // console.log(test.getBBox());
 
   //moveCamera(speedToPosition(mouseMovement));
-  cameraZoom(zoom, absoluteOrigin.add(new Vector(70, 400)));
+  cameraZoom(zoom, absoluteOrigin.add(new Vector(0, 400)));
 
   function update(progress) {
     if (running) {
