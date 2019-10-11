@@ -4,7 +4,7 @@ window.addEventListener("load", function () {
   var background = document.getElementById('background').contentDocument;
   var parent = Snap('#background');
 
-  var width = 1400;
+  var width = 900;
   var height = parent.getBBox().height;
 
   parent.attr({width: width});
@@ -130,9 +130,11 @@ window.addEventListener("load", function () {
           case 16: //shift
             running = true;
             break;
+          case 81: //Q
           case 37: //arrow left
             mouseMovement -= movementSpeed;
             break;
+          case 68:
           case 39: //arrow right
             mouseMovement += movementSpeed;
             break;
@@ -146,15 +148,66 @@ window.addEventListener("load", function () {
           case 16: //shift
             running = false;
             break;
+          case 81: //Q
           case 37: //arrow left
             mouseMovement = 0;
             break;
+          case 68: //D
           case 39: //arrow right
             mouseMovement = 0;
             break;
         }
       }
   );
+
+  var relativePositionVector = new Vector(0, 0);
+
+  var pointerHandler = (event) => {
+    event.preventDefault();
+
+    var mouseVector = new Vector(
+        event.x - parentTransform.translate.x,
+        event.y - parentTransform.translate.y,
+    );
+
+    //console.log(mouseVector.x - parentTransform.translate.x, playerPosition.x + parentTransform.translate.x);
+
+    console.log(relativePositionVector.distance(mouseVector));
+
+    //cameraPos = cameraPos.add(partialMoveCameraVector);
+
+    //playerPosition.subtract(cameraPos);
+
+    // cameraZoom(zoom, mouseVector);
+
+    // var deadZone = cameraDeadZone.width() / 2;
+    // var mouseVector = new Vector(event.x, event.y);
+    // var cameraCenterVector = new Vector(camera.cx(), camera.cy());
+    // var distanceVector = mouseVector.distance(cameraCenterVector);
+    //
+    // if (distanceVector > deadZone) {
+    //   moveDistance.x = camera.cx() - event.x;
+    //   moveDistance.y = camera.cy() - event.y;
+    // } else {
+    //   moveDistance.x = 0;
+    //   moveDistance.y = 0;
+    // }
+    //
+    // var adjustedMoveClamp = moveClamp * (zoomLevel * 2);
+    //
+    // let absMoveX = Math.abs(moveDistance.x) / (zoomLevel * 1.5);
+    // let absMoveXY= Math.abs(moveDistance.y) / (zoomLevel * 1.5);
+    //
+    // absMoveX = absMoveX < adjustedMoveClamp ? absMoveX : adjustedMoveClamp;
+    // absMoveXY = absMoveXY < adjustedMoveClamp ? absMoveXY : adjustedMoveClamp;
+    //
+    // moveDistance.x *= (absMoveX / 500000) * absMoveX;
+    // moveDistance.y *= (absMoveXY / 500000) * absMoveXY;
+
+    return false;
+  };
+
+  background.addEventListener('pointermove', pointerHandler);
 
   function updateViewBox()
   {
@@ -165,7 +218,7 @@ window.addEventListener("load", function () {
     viewBox.x2 = viewBox.x + viewBox.width;
   }
 
-  var zoom = 6;
+  var zoom = 1;
   let cameraRecenterEase = 0.04;
   let deadZoneSize = width * 0.01;
 
@@ -173,6 +226,7 @@ window.addEventListener("load", function () {
 
   //Player
   var positionVector = new Vector(0, 0);
+  var playerPosition  = new Vector(0, 0);
 
   function speedToPosition(speed)
   {
@@ -186,12 +240,18 @@ window.addEventListener("load", function () {
     walkAnimation.currentTime = (currentPosition / path1Length) * duration;
 
     positionVector = new Vector(pathWalk.getPointAtLength(currentPosition).x, pathWalk.getPointAtLength(currentPosition).y);
+
     var actualMoveDistance = positionVector.subtract(previousPositionVector);
 
     updateViewBox();
 
-    positionVector.x = (positionVector.x * parentTransform.scale.x) + (parentTransform.translate.x * zoom);
-    positionVector.y = (positionVector.y * parentTransform.scale.y) + (parentTransform.translate.y * zoom);
+    relativePositionVector = new Vector(
+        (positionVector.x * parentTransform.scale.x),
+        (positionVector.y * parentTransform.scale.y)
+    );
+
+    positionVector.x = relativePositionVector.x + (parentTransform.translate.x * zoom);
+    positionVector.y = relativePositionVector.y + (parentTransform.translate.y * zoom);
 
     var deadZone = {
       right: (width - (deadZoneSize * zoom)),
@@ -214,7 +274,7 @@ window.addEventListener("load", function () {
 
     cameraZoom(zoom, cameraPos);
 
-    let playerPosition = new Vector(
+    playerPosition = new Vector(
         pathWalk.getPointAtLength(currentPosition).x - (width / zoom / 2),
         pathWalk.getPointAtLength(currentPosition).y - ((height * 1.5) / zoom / 2)
     );
@@ -236,8 +296,6 @@ window.addEventListener("load", function () {
   }
 
   cameraZoom(zoom, absoluteOrigin.add(new Vector(0, 550)));
-
-  //moveCameraVector = new Vector(10, 0);
 
   function update(progress) {
     if (running) {
