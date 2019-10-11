@@ -10,6 +10,11 @@ window.addEventListener("load", function () {
   parent.attr({width: width});
   parent.attr({height: height});
 
+  var zoom = 4;
+  let cameraRecenterEase = 0.04;
+  let deadZoneSize = width * 0.01;
+  let maxMouseLookDistance = zoom * 10;
+
   var cameraViewBox = parent.attr("viewBox");
 
   cameraViewBox.x = 0; //(width / 2) * -1;
@@ -56,8 +61,21 @@ window.addEventListener("load", function () {
 
     point = point.multiply(-1);
 
+    console.log(mouseLookOffsetVector);
+
+    var mouseLookDistance = Math.abs(mouseLookOffsetVector.len()) > maxMouseLookDistance ? maxMouseLookDistance : mouseLookOffsetVector.len();
+
+    var offsetVector = new Vector(mouseLookDistance, 0);
+
+    var baseAngleVector = new Vector(mouseLookDistance, 0);
+
+    offsetVector = baseAngleVector.rotate(mouseLookOffsetVector.angle(offsetVector), new Vector(0, 0));
+    offsetVector = offsetVector.multiply(new Vector(1, -1));
+    //offsetVector = point;
+    offsetVector = point.add(offsetVector);
+
     parent.node.style.transform = 'scaleX(' + zoomLevel + ') scaleY(' + zoomLevel + ')';
-    parent.node.style.transform += ' translateX(' + point.x + 'px) translateY(' + point.y + 'px)';
+    parent.node.style.transform += ' translateX(' + offsetVector.x + 'px) translateY(' + offsetVector.y + 'px)';
     parent.node.style.transformOrigin = 'top left';
 
     parentTransform.translate = new Vector(point.x, point.y);
@@ -161,48 +179,21 @@ window.addEventListener("load", function () {
   );
 
   var relativePositionVector = new Vector(0, 0);
+  var mouseLookOffsetVector = new Vector(0, 0);
 
   var pointerHandler = (event) => {
     event.preventDefault();
 
     var mouseVector = new Vector(
-        event.x - parentTransform.translate.x,
-        event.y - parentTransform.translate.y,
+        event.x - (parentTransform.translate.x * zoom),
+        event.y - (parentTransform.translate.y * zoom),
     );
 
-    //console.log(mouseVector.x - parentTransform.translate.x, playerPosition.x + parentTransform.translate.x);
+    mouseLookOffsetVector = relativePositionVector.subtract(mouseVector);
 
-    console.log(relativePositionVector.distance(mouseVector));
-
-    //cameraPos = cameraPos.add(partialMoveCameraVector);
-
-    //playerPosition.subtract(cameraPos);
-
-    // cameraZoom(zoom, mouseVector);
-
-    // var deadZone = cameraDeadZone.width() / 2;
-    // var mouseVector = new Vector(event.x, event.y);
-    // var cameraCenterVector = new Vector(camera.cx(), camera.cy());
-    // var distanceVector = mouseVector.distance(cameraCenterVector);
-    //
-    // if (distanceVector > deadZone) {
-    //   moveDistance.x = camera.cx() - event.x;
-    //   moveDistance.y = camera.cy() - event.y;
-    // } else {
-    //   moveDistance.x = 0;
-    //   moveDistance.y = 0;
-    // }
-    //
-    // var adjustedMoveClamp = moveClamp * (zoomLevel * 2);
-    //
-    // let absMoveX = Math.abs(moveDistance.x) / (zoomLevel * 1.5);
-    // let absMoveXY= Math.abs(moveDistance.y) / (zoomLevel * 1.5);
-    //
-    // absMoveX = absMoveX < adjustedMoveClamp ? absMoveX : adjustedMoveClamp;
-    // absMoveXY = absMoveXY < adjustedMoveClamp ? absMoveXY : adjustedMoveClamp;
-    //
-    // moveDistance.x *= (absMoveX / 500000) * absMoveX;
-    // moveDistance.y *= (absMoveXY / 500000) * absMoveXY;
+    if (relativePositionVector.len() !== 0) {
+      cameraZoom(zoom, cameraPos);
+    }
 
     return false;
   };
@@ -217,10 +208,6 @@ window.addEventListener("load", function () {
     viewBox.height = originalViewBox.height * parentTransform.scale.y;
     viewBox.x2 = viewBox.x + viewBox.width;
   }
-
-  var zoom = 1;
-  let cameraRecenterEase = 0.04;
-  let deadZoneSize = width * 0.01;
 
   var moveCameraVector = new Vector(0, 0);
 
