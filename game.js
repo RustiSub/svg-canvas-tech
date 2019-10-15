@@ -10,12 +10,20 @@ window.addEventListener("load", function () {
   parent.attr({width: width});
   parent.attr({height: height});
 
-  var zoom = 4;
+  var zoom = 6;
   let cameraRecenterEase = 0.04;
   let deadZoneSize = width * 0.01;
   let maxMouseLookDistance = zoom * 10;
 
+  var mouseLookEnabled = false;
+
   var cameraViewBox = parent.attr("viewBox");
+
+  var moveCameraVector = new Vector(0, 0);
+
+  //Player
+  var positionVector = new Vector(0, 0);
+  var playerPosition  = new Vector(0, 0);
 
   cameraViewBox.x = 0; //(width / 2) * -1;
   cameraViewBox.y = 0;
@@ -61,28 +69,13 @@ window.addEventListener("load", function () {
 
     point = point.multiply(-1);
 
-    console.log(mouseLookOffsetVector);
-
-    var mouseLookDistance = Math.abs(mouseLookOffsetVector.len()) > maxMouseLookDistance ? maxMouseLookDistance : mouseLookOffsetVector.len();
-
-    var offsetVector = new Vector(mouseLookDistance, 0);
-
-    var baseAngleVector = new Vector(mouseLookDistance, 0);
-
-    offsetVector = baseAngleVector.rotate(mouseLookOffsetVector.angle(offsetVector), new Vector(0, 0));
-    offsetVector = offsetVector.multiply(new Vector(1, -1));
-    //offsetVector = point;
-    offsetVector = point.add(offsetVector);
-
     parent.node.style.transform = 'scaleX(' + zoomLevel + ') scaleY(' + zoomLevel + ')';
-    parent.node.style.transform += ' translateX(' + offsetVector.x + 'px) translateY(' + offsetVector.y + 'px)';
+    parent.node.style.transform += ' translateX(' + point.x + 'px) translateY(' + point.y + 'px)';
     parent.node.style.transformOrigin = 'top left';
 
     parentTransform.translate = new Vector(point.x, point.y);
     parentTransform.scale = new Vector(zoomLevel, zoomLevel);
   }
-
-  //cameraZoom(10, targetPointVector);
 
   function applyTransform(point, matrix) {
     point.x *= matrix.a;
@@ -101,15 +94,23 @@ window.addEventListener("load", function () {
 
   var mouseAnimationLength = 10000;
 
-  var mouse = parent.select('#simpleMouse');
-  var mouseShape = parent.select('#mouseShape');
+  var mouse = parent.select('#player-group');
+  var playerShape = parent.select('#player-shape');
+  var playerPostionVector = new Vector(0, 0);
 
   mouse.transform('');
+  playerShape.attr({cx: 0});
+  playerShape.attr({cy: 0});
+
+  var mouseLookOffsetVector = new Vector(0, 0);
+  var mouseLookCircle =  parent.circle(0, 0, 3);
 
   var mouseVector = new Vector(mouse.getBBox().cx, mouse.getBBox().cy);
   var animationOriginVector = new Vector(0, 0);
   var moveMouseVector = animationOriginVector.subtract(mouseVector);
   mouse.transform('translate(' + moveMouseVector.x + ',' + moveMouseVector.y + ')');
+
+  mouseLookCircle.appendTo(mouse);
 
   var walkAnimation;
 
@@ -118,9 +119,17 @@ window.addEventListener("load", function () {
   function mouseWalk() {
     mouse.node.style = 'offset-path: path("' + pathWalk.attr('d') + '")';
 
+    positionVector = new Vector(pathWalk.getPointAtLength(0).x, pathWalk.getPointAtLength(0).y);
+
     walkAnimation = mouse.node.animate([
-      { offsetDistance: 0 },
-      { offsetDistance: '100%' }
+      {
+        offsetDistance: 0,
+        offsetAnchor: '0 0'
+      },
+      {
+        offsetDistance: '100%',
+        offsetAnchor: '0 0'
+      }
     ], {
       duration: duration,
       easing: 'linear',
@@ -179,26 +188,64 @@ window.addEventListener("load", function () {
   );
 
   var relativePositionVector = new Vector(0, 0);
-  var mouseLookOffsetVector = new Vector(0, 0);
+  var mouseLookCircleVector;
 
-  var pointerHandler = (event) => {
-    event.preventDefault();
+  var mouseVector = new Vector(0,0);
 
-    var mouseVector = new Vector(
-        event.x - (parentTransform.translate.x * zoom),
-        event.y - (parentTransform.translate.y * zoom),
+  function mouseMove(event) {
+    mouseVector = new Vector(
+        (event.x - (parentTransform.translate.x * parentTransform.scale.x)) / parentTransform.scale.x ,
+        (event.y - (parentTransform.translate.y * parentTransform.scale.y)) / parentTransform.scale.y,
     );
 
-    mouseLookOffsetVector = relativePositionVector.subtract(mouseVector);
+    var mouseLookCircleVector = relativePositionVector.multiply(new Vector(1 / parentTransform.scale.x, 1 / parentTransform.scale.y)); //relativePositionVector.subtract(mouseVector);
 
-    if (relativePositionVector.len() !== 0) {
-      cameraZoom(zoom, cameraPos);
+    var actualAngleVector = mouseVector.subtract(mouseLookCircleVector);
+    var mouseLookDistance = Math.abs(actualAngleVector.len()) > maxMouseLookDistance ? maxMouseLookDistance : actualAngleVector.len();
+
+    mouseLookOffsetVector = new Vector(playerShape.getBBox().cx, playerShape.getBBox().cy);
+    var baseAngleVector = new Vector(mouseLookDistance, 0);
+    baseAngleVector = baseAngleVector.rotateAngle(actualAngleVector.angle());
+    baseAngleVector = baseAngleVector.add(mouseLookOffsetVector);
+
+    if (mouseLookDistance) {
+      mouseLookCircle.attr({transform: 'translate(' + baseAngleVector.x + ',' + baseAngleVector.y + ')'});
     }
+  }
+
+  var pointerHandler = (event) => {
+    if (!mouseLookEnabled) {
+      return event;
+    }
+
+    event.preventDefault();
+    mouseMove(event);
 
     return false;
   };
 
   background.addEventListener('pointermove', pointerHandler);
+  window.addEventListener('pointermove', pointerHandler);
+
+  var mouseDown = (event) => {
+    if (event.button === 0) {
+      mouseLookEnabled = true;
+
+      mouseMove(event);
+    }
+  };
+
+  background.addEventListener('mousedown', mouseDown);
+  window.addEventListener('mousedown', mouseDown);
+
+  var mouseUp = (event) => {
+    if (event.button === 0) {
+      mouseLookEnabled = false;
+    }
+  };
+
+  background.addEventListener('mouseup', mouseUp);
+  window.addEventListener('mouseup', mouseDown);
 
   function updateViewBox()
   {
@@ -208,12 +255,6 @@ window.addEventListener("load", function () {
     viewBox.height = originalViewBox.height * parentTransform.scale.y;
     viewBox.x2 = viewBox.x + viewBox.width;
   }
-
-  var moveCameraVector = new Vector(0, 0);
-
-  //Player
-  var positionVector = new Vector(0, 0);
-  var playerPosition  = new Vector(0, 0);
 
   function speedToPosition(speed)
   {
@@ -247,16 +288,16 @@ window.addEventListener("load", function () {
       top: (deadZoneSize) * zoom,
     };
 
-    var pushDeadzone = false;
+    var pushDeadZone = false;
 
     if ((positionVector.x > deadZone.right && actualMoveDistance.x > 0) || positionVector.x < deadZone.left && actualMoveDistance.x < 0) {
       cameraPos = cameraPos.add(new Vector(actualMoveDistance.x, 0));
-      pushDeadzone = true;
+      pushDeadZone = true;
     }
 
     if ((positionVector.y > deadZone.bottom && actualMoveDistance.y > 0) || (positionVector.y < deadZone.top && actualMoveDistance.y < 0)) {
       cameraPos = cameraPos.add(new Vector(0, actualMoveDistance.y));
-      pushDeadzone = true;
+      pushDeadZone = true;
     }
 
     cameraZoom(zoom, cameraPos);
@@ -266,9 +307,11 @@ window.addEventListener("load", function () {
         pathWalk.getPointAtLength(currentPosition).y - ((height * 1.5) / zoom / 2)
     );
 
-    if (Math.abs(playerPosition.subtract(cameraPos).len()) > deadZone.right * 0.01 ||  pushDeadzone) {
+    if (Math.abs(playerPosition.subtract(cameraPos).len()) > deadZone.right * 0.01 ||  pushDeadZone) {
       moveCameraVector = playerPosition.subtract(cameraPos);
     }
+
+    playerPostionVector = new Vector(playerShape.getBBox().cx, playerShape.getBBox().cy);
 
     return currentPosition / path1Length;
   }

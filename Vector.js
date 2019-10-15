@@ -130,13 +130,21 @@ var wrect = {};
       );
     };
 
+    Vector.prototype.normaliseRadians = function (radians) {
+      radians = radians % (2 * Math.PI);
+      if (radians < 0) {
+        radians += (2 * Math.PI);
+      }
+      return radians;
+    };
+
     /**
      * rotate vector
      * @param {Number} angle to rotate vector by, radians. can be negative
      * @returns {wrect.Physics.Vector} rotated vector
      */
     Vector.prototype.rotateAngle = function(angle){
-      angle = window.game.getHelpers().math.normaliseRadians(angle);
+      angle = this.normaliseRadians(angle);
       return new Vector(this.x * Math.cos(angle)- this.y * Math.sin(angle),
           this.x * Math.sin(angle)+this.y*Math.cos(angle));
     };
@@ -158,8 +166,12 @@ var wrect = {};
      * @returns {Number} angle between this vector and v in radians
      */
     Vector.prototype.angle=function(v){
+      if (v) {
         var perpDot = this.x * v.y - this.y * v.x;
         return Math.atan2(perpDot, this.dot(v));
+      }
+
+      return Math.atan2(this.y, this.x);
     };
 
     /**

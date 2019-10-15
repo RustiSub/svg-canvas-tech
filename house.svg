@@ -1565,19 +1565,19 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.125"
-     inkscape:cx="2131.1303"
-     inkscape:cy="1450.2954"
+     inkscape:zoom="4"
+     inkscape:cx="453.78117"
+     inkscape:cy="570.87859"
      inkscape:document-units="mm"
-     inkscape:current-layer="kitchen"
+     inkscape:current-layer="player-group"
      showgrid="false"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="1440"
-     inkscape:window-height="855"
-     inkscape:window-x="0"
+     inkscape:window-width="1920"
+     inkscape:window-height="1035"
+     inkscape:window-x="1920"
      inkscape:window-y="1"
      inkscape:window-maximized="1"
      inkscape:snap-global="false"
@@ -1694,7 +1694,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -3542,12 +3542,13 @@
      inkscape:connector-curvature="0"
      inkscape:label="path-trip"
      sodipodi:nodetypes="cccccccccccccsccccccc" />
-  <ellipse
-     style="opacity:1;vector-effect:none;fill:#ff0a04;fill-opacity:1;stroke:none;stroke-width:0.38235301;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-     id="simpleMouse"
-     cx="118.61422"
-     cy="455.19238"
-     rx="2.4321532"
-     ry="4.2920351"
-     inkscape:label="simpleMouse" />
+  <g
+     id="player-group"
+     inkscape:label="player-group">
+    <path
+       style="opacity:1;vector-effect:none;fill:#ff0a04;fill-opacity:1;stroke:none;stroke-width:0.38235301;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 121.04637,455.19238 c -0.0347,1.55353 -0.42046,3.55982 -2.01876,4.22959 -1.53534,0.36638 -2.43957,-1.42801 -2.68025,-2.67433 -0.36922,-1.94543 -0.19893,-4.50899 1.61626,-5.69088 1.41395,-0.65592 2.54838,0.98534 2.81815,2.18877 0.18136,0.63181 0.26399,1.2902 0.2646,1.94685 z"
+       id="player-shape"
+       inkscape:connector-curvature="0" />
+  </g>
 </svg>
