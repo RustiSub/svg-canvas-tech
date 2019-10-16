@@ -13,7 +13,7 @@ window.addEventListener("load", function () {
   var zoom = 6;
   let cameraRecenterEase = 0.04;
   let deadZoneSize = width * 0.01;
-  let maxMouseLookDistance = zoom * 10;
+  let maxMouseLookDistance = zoom * 6;
 
   var mouseLookEnabled = false;
 
@@ -60,6 +60,8 @@ window.addEventListener("load", function () {
   };
 
   var cameraPos = new Vector(0, 0);
+
+  var mouseLookVector = new Vector(0, 0);
 
   function cameraZoom(zoomLevel, point) {
     //center of the current viewbox rectangle
@@ -110,7 +112,7 @@ window.addEventListener("load", function () {
   var moveMouseVector = animationOriginVector.subtract(mouseVector);
   mouse.transform('translate(' + moveMouseVector.x + ',' + moveMouseVector.y + ')');
 
-  mouseLookCircle.appendTo(mouse);
+  //mouseLookCircle.appendTo(mouse);
 
   var walkAnimation;
 
@@ -187,6 +189,7 @@ window.addEventListener("load", function () {
       }
   );
 
+  var absolutePositionVector = new Vector(0, 0);
   var relativePositionVector = new Vector(0, 0);
   var mouseLookCircleVector;
 
@@ -198,19 +201,11 @@ window.addEventListener("load", function () {
         (event.y - (parentTransform.translate.y * parentTransform.scale.y)) / parentTransform.scale.y,
     );
 
-    var mouseLookCircleVector = relativePositionVector.multiply(new Vector(1 / parentTransform.scale.x, 1 / parentTransform.scale.y)); //relativePositionVector.subtract(mouseVector);
+    calculateMouseToMouseLook();
 
-    var actualAngleVector = mouseVector.subtract(mouseLookCircleVector);
-    var mouseLookDistance = Math.abs(actualAngleVector.len()) > maxMouseLookDistance ? maxMouseLookDistance : actualAngleVector.len();
+    cameraZoom(zoom, cameraPos);
 
-    mouseLookOffsetVector = new Vector(playerShape.getBBox().cx, playerShape.getBBox().cy);
-    var baseAngleVector = new Vector(mouseLookDistance, 0);
-    baseAngleVector = baseAngleVector.rotateAngle(actualAngleVector.angle());
-    baseAngleVector = baseAngleVector.add(mouseLookOffsetVector);
-
-    if (mouseLookDistance) {
-      mouseLookCircle.attr({transform: 'translate(' + baseAngleVector.x + ',' + baseAngleVector.y + ')'});
-    }
+    focusCamera();
   }
 
   var pointerHandler = (event) => {
@@ -241,6 +236,8 @@ window.addEventListener("load", function () {
   var mouseUp = (event) => {
     if (event.button === 0) {
       mouseLookEnabled = false;
+
+      //cameraZoom(zoom, cameraPos.add(mouseLookVector));
     }
   };
 
@@ -256,11 +253,23 @@ window.addEventListener("load", function () {
     viewBox.x2 = viewBox.x + viewBox.width;
   }
 
+  var actualMoveDistanceVector = new Vector(0, 0);
+  var playerOrientationVector = 0;
+
+  function focusCamera() {
+    moveCameraVector = playerPosition.subtract(cameraPos);
+
+    var mouseLookVectorLength = (mouseLookVector.len() / maxMouseLookDistance);
+    mouseLookVectorLength = mouseLookVectorLength > 0.25 ? mouseLookVectorLength : 0;
+    var easedMouseLookVector = mouseLookVector.multiply(mouseLookVectorLength);
+
+    moveCameraVector = moveCameraVector.add(easedMouseLookVector);
+  }
+
   function speedToPosition(speed)
   {
     var iteration = Math.floor(walkAnimation.currentTime / duration);
     var currentPosition = ((walkAnimation.currentTime / duration) - iteration) * path1Length;
-
     var previousPositionVector = new Vector(pathWalk.getPointAtLength(currentPosition).x, pathWalk.getPointAtLength(currentPosition).y);
 
     currentPosition += speed;
@@ -269,9 +278,11 @@ window.addEventListener("load", function () {
 
     positionVector = new Vector(pathWalk.getPointAtLength(currentPosition).x, pathWalk.getPointAtLength(currentPosition).y);
 
-    var actualMoveDistance = positionVector.subtract(previousPositionVector);
+    actualMoveDistanceVector = positionVector.subtract(previousPositionVector);
 
     updateViewBox();
+
+    absolutePositionVector = new Vector(positionVector.x, positionVector.y);
 
     relativePositionVector = new Vector(
         (positionVector.x * parentTransform.scale.x),
@@ -290,16 +301,6 @@ window.addEventListener("load", function () {
 
     var pushDeadZone = false;
 
-    if ((positionVector.x > deadZone.right && actualMoveDistance.x > 0) || positionVector.x < deadZone.left && actualMoveDistance.x < 0) {
-      cameraPos = cameraPos.add(new Vector(actualMoveDistance.x, 0));
-      pushDeadZone = true;
-    }
-
-    if ((positionVector.y > deadZone.bottom && actualMoveDistance.y > 0) || (positionVector.y < deadZone.top && actualMoveDistance.y < 0)) {
-      cameraPos = cameraPos.add(new Vector(0, actualMoveDistance.y));
-      pushDeadZone = true;
-    }
-
     cameraZoom(zoom, cameraPos);
 
     playerPosition = new Vector(
@@ -308,7 +309,7 @@ window.addEventListener("load", function () {
     );
 
     if (Math.abs(playerPosition.subtract(cameraPos).len()) > deadZone.right * 0.01 ||  pushDeadZone) {
-      moveCameraVector = playerPosition.subtract(cameraPos);
+      focusCamera();
     }
 
     playerPostionVector = new Vector(playerShape.getBBox().cx, playerShape.getBBox().cy);
@@ -327,7 +328,40 @@ window.addEventListener("load", function () {
 
   cameraZoom(zoom, absoluteOrigin.add(new Vector(0, 550)));
 
+  function translatePointerToScreen(pointerVector)
+  {
+
+  }
+
+  function translatePointerToElement(pointerVector)
+  {
+
+  }
+
+  /**
+   * Vector needs to be positioned to the player shape
+   * @param mouseLookVector
+   */
+  function positionMouseLookVector()
+  {
+    var offsetVector = mouseLookVector.add(absolutePositionVector);
+
+    mouseLookCircle.attr({transform: 'translate(' + offsetVector.x + ',' + offsetVector.y + ')'});
+  }
+
+  function calculateMouseToMouseLook() {
+    var mouseLookAngleVector = mouseVector.subtract(absolutePositionVector);
+    var mouseLookDistance = Math.abs(mouseLookAngleVector.len()) > maxMouseLookDistance ? maxMouseLookDistance : mouseLookAngleVector.len();
+    var baseAngleVector = new Vector(mouseLookDistance, 0);
+
+    mouseLookVector = baseAngleVector.rotateAngle(mouseLookAngleVector.angle());
+
+    positionMouseLookVector();
+  }
+
   function update(progress) {
+    positionMouseLookVector();
+
     if (running) {
       maxMovementSpeed = runMaxMovementSpeed;
     } else {
