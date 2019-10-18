@@ -145,13 +145,17 @@ window.addEventListener("load", function () {
   mouseWalk();
 
   //Movement
-  var mouseMovement = 0;
-  var movementSpeed = 1;
-  var walkMaxMovementSpeed = 2;
-  var runMaxMovementSpeed = 5;
+  var mouseMovement = new Vector(0, 0);
+  var movementSpeed = 10; // 10units/1000ms // 10 * 16ms / 1000ms
+  var walkMaxMovementSpeed = 100;
+  var runMaxMovementSpeed = 150;
   var maxMovementSpeed = walkMaxMovementSpeed;
 
+  //Physics
+
   var running = false;
+
+  var movementForce = new Vector(0, 0);
 
   background.addEventListener('keydown',
       function (event) {
@@ -161,11 +165,11 @@ window.addEventListener("load", function () {
             break;
           case 81: //Q
           case 37: //arrow left
-            mouseMovement -= movementSpeed;
+            movementForce.x = -1 * movementSpeed;
             break;
           case 68:
           case 39: //arrow right
-            mouseMovement += movementSpeed;
+            movementForce.x = movementSpeed;
             break;
         }
       }
@@ -179,11 +183,11 @@ window.addEventListener("load", function () {
             break;
           case 81: //Q
           case 37: //arrow left
-            mouseMovement = 0;
+            movementForce.x = 0;
             break;
           case 68: //D
           case 39: //arrow right
-            mouseMovement = 0;
+            movementForce.x = 0;
             break;
         }
       }
@@ -266,15 +270,41 @@ window.addEventListener("load", function () {
     moveCameraVector = moveCameraVector.add(easedMouseLookVector);
   }
 
+  var gravityForceVector = new Vector(0, 0);
+
+  function applyPhysics(previousPositionVector, currentPosition, speed) {
+    var pathAngle = previousPositionVector.subtract(positionVector);
+    var angle = Math.abs(Math.sin(pathAngle.angle()));
+
+    //Reduce speed
+    //currentPosition -= speed.x;
+    //currentPosition += speed.x - (speed.x * (angle * 0.75));
+
+    angle = isNaN(angle) ? 0 : angle;
+
+
+    gravityForceVector = angle * 10;
+
+
+    return currentPosition;
+  }
+
   function speedToPosition(speed)
   {
     var iteration = Math.floor(walkAnimation.currentTime / duration);
     var currentPosition = ((walkAnimation.currentTime / duration) - iteration) * path1Length;
     var previousPositionVector = new Vector(pathWalk.getPointAtLength(currentPosition).x, pathWalk.getPointAtLength(currentPosition).y);
 
-    currentPosition += speed;
+    currentPosition += speed.x;
 
-    walkAnimation.currentTime = (currentPosition / path1Length) * duration;
+    positionVector = new Vector(pathWalk.getPointAtLength(currentPosition).x, pathWalk.getPointAtLength(currentPosition).y);
+
+    actualMoveDistanceVector = positionVector.subtract(previousPositionVector);
+
+    currentPosition = applyPhysics(previousPositionVector, currentPosition, speed);
+    var currentTime = (currentPosition / path1Length) * duration;
+
+    walkAnimation.currentTime = currentTime;
 
     positionVector = new Vector(pathWalk.getPointAtLength(currentPosition).x, pathWalk.getPointAtLength(currentPosition).y);
 
@@ -328,16 +358,6 @@ window.addEventListener("load", function () {
 
   cameraZoom(zoom, absoluteOrigin.add(new Vector(0, 550)));
 
-  function translatePointerToScreen(pointerVector)
-  {
-
-  }
-
-  function translatePointerToElement(pointerVector)
-  {
-
-  }
-
   /**
    * Vector needs to be positioned to the player shape
    * @param mouseLookVector
@@ -359,6 +379,38 @@ window.addEventListener("load", function () {
     positionMouseLookVector();
   }
 
+  /**
+   * Friction is an opposed horizontal force with a fraction of the force
+   * The higher the speed, the lower friction becomes, reaching minimal friction at max speed.
+   * So the friction needs to start big, then scale down with the speed but have a fixed minimum value.
+   *
+   * @param forceVector
+   */
+  function applyFriction(currentSpeed, forceVector, progress)
+  {
+    // var maxFrictionForce = new Vector(0.5, 0);
+    // var minFrictionForce = new Vector(0.1, 0);
+    // var frictionValue = maxFrictionForce.subtract(minFrictionForce);
+    // var frictionSpeed = maxMovementSpeed;
+    // var frictionForce = Math.abs(forceVector.x / frictionSpeed);
+    // var appliedFrictionForce = new Vector(minFrictionForce.x + frictionForce * frictionValue.x, 0);
+    //
+    // appliedFrictionForce = forceVector.x > 0 ? appliedFrictionForce.multiply(-1) : appliedFrictionForce;
+    //
+    // forceVector = forceVector.add(appliedFrictionForce);
+
+    var forceSign = Math.sign(forceVector.x);
+
+    var frictionFactor = (movementSpeed * 0.5) / progress;
+    var frictionVector = new Vector(-1 * forceVector.x, 0);
+    frictionVector = frictionVector.unit();
+    forceVector = forceVector.add(frictionVector.multiply(frictionFactor));
+    //
+    // forceVector = Math.sign(forceVector) == forceSign ? forceVector : new Vector(0, 0);
+
+    return forceVector;
+  }
+
   function update(progress) {
     positionMouseLookVector();
 
@@ -368,10 +420,18 @@ window.addEventListener("load", function () {
       maxMovementSpeed = walkMaxMovementSpeed;
     }
 
-    mouseMovement = mouseMovement > maxMovementSpeed ? maxMovementSpeed : mouseMovement;
-    mouseMovement = mouseMovement < maxMovementSpeed * -1 ? maxMovementSpeed * -1 : mouseMovement;
+    maxMovementSpeed = maxMovementSpeed / progress;
 
-    if (mouseMovement !== 0) {
+    mouseMovement.x = mouseMovement.x > maxMovementSpeed ? maxMovementSpeed : mouseMovement.x;
+    mouseMovement.x = mouseMovement.x < maxMovementSpeed * -1 ? maxMovementSpeed * -1 : mouseMovement.x;
+
+    var updateMovementForce = movementForce.divide(progress);
+
+    mouseMovement = mouseMovement.add(updateMovementForce);
+    mouseMovement = applyFriction(mouseMovement.subtract(updateMovementForce), mouseMovement, progress);
+    mouseMovement.x = Math.abs(mouseMovement.x) < 0.0001 ? 0 : mouseMovement.x;
+
+    if (mouseMovement.x !== 0) {
       speedToPosition(mouseMovement);
     }
 
@@ -392,6 +452,8 @@ window.addEventListener("load", function () {
 
   function loop(timestamp) {
     var progress = timestamp - lastRender;
+
+    progress = 1000 / progress;
 
     update(progress);
 
