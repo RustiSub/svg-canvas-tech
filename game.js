@@ -98,7 +98,6 @@ window.addEventListener("load", function () {
 
   var mouse = parent.select('#player-group');
   var playerShape = parent.select('#player-shape');
-  var playerPostionVector = new Vector(0, 0);
 
   mouse.transform('');
   playerShape.attr({cx: 0});
@@ -257,7 +256,6 @@ window.addEventListener("load", function () {
     viewBox.x2 = viewBox.x + viewBox.width;
   }
 
-  var actualMoveDistanceVector = new Vector(0, 0);
   var playerOrientationVector = 0;
 
   function focusCamera() {
@@ -270,47 +268,17 @@ window.addEventListener("load", function () {
     moveCameraVector = moveCameraVector.add(easedMouseLookVector);
   }
 
-  var gravityForceVector = new Vector(0, 0);
-
-  function applyPhysics(previousPositionVector, currentPosition, speed) {
-    var pathAngle = previousPositionVector.subtract(positionVector);
-    var angle = Math.abs(Math.sin(pathAngle.angle()));
-
-    //Reduce speed
-    //currentPosition -= speed.x;
-    //currentPosition += speed.x - (speed.x * (angle * 0.75));
-
-    angle = isNaN(angle) ? 0 : angle;
-
-
-    gravityForceVector = angle * 10;
-
-
-    return currentPosition;
-  }
-
-  function speedToPosition(speed)
+  function updatePosition(currentPosition, progress)
   {
-    var iteration = Math.floor(walkAnimation.currentTime / duration);
-    var currentPosition = ((walkAnimation.currentTime / duration) - iteration) * path1Length;
-    var previousPositionVector = new Vector(pathWalk.getPointAtLength(currentPosition).x, pathWalk.getPointAtLength(currentPosition).y);
+    if (isNaN(currentPosition)) {
+      return;
+    }
 
-    currentPosition += speed.x;
+    currentPosition = currentPosition < 0 ? path1Length + currentPosition : currentPosition;
 
-    positionVector = new Vector(pathWalk.getPointAtLength(currentPosition).x, pathWalk.getPointAtLength(currentPosition).y);
-
-    actualMoveDistanceVector = positionVector.subtract(previousPositionVector);
-
-    currentPosition = applyPhysics(previousPositionVector, currentPosition, speed);
-    var currentTime = (currentPosition / path1Length) * duration;
-
-    walkAnimation.currentTime = currentTime;
+    walkAnimation.currentTime = (currentPosition / path1Length) * duration;
 
     positionVector = new Vector(pathWalk.getPointAtLength(currentPosition).x, pathWalk.getPointAtLength(currentPosition).y);
-
-    actualMoveDistanceVector = positionVector.subtract(previousPositionVector);
-
-    updateViewBox();
 
     absolutePositionVector = new Vector(positionVector.x, positionVector.y);
 
@@ -341,10 +309,6 @@ window.addEventListener("load", function () {
     if (Math.abs(playerPosition.subtract(cameraPos).len()) > deadZone.right * 0.01 ||  pushDeadZone) {
       focusCamera();
     }
-
-    playerPostionVector = new Vector(playerShape.getBBox().cx, playerShape.getBBox().cy);
-
-    return currentPosition / path1Length;
   }
 
   function moveCamera(pos)
@@ -379,42 +343,131 @@ window.addEventListener("load", function () {
     positionMouseLookVector();
   }
 
-  /**
-   * Friction is an opposed horizontal force with a fraction of the force
-   * The higher the speed, the lower friction becomes, reaching minimal friction at max speed.
-   * So the friction needs to start big, then scale down with the speed but have a fixed minimum value.
-   *
-   * @param forceVector
-   */
-  function applyFriction(currentSpeed, forceVector, progress)
+  function getPathAngle(previousPositionVector, nexPositionVector) {
+    var pathAngle = previousPositionVector.subtract(nexPositionVector);
+    var angle = Math.sin(pathAngle.angle());
+
+    angle = isNaN(angle) ? 0 : angle;
+
+    return angle;
+  }
+
+  var gravityForceVector = new Vector(0, 4);
+
+  function applyGravity(angle, currentPosition, speed, progress) {
+    var previousPosition = currentPosition - speed.x;
+
+    var pathDirection = Math.sign(angle) * Math.sign(currentPosition - previousPosition);
+    currentPosition -= (gravityForceVector.y * Math.abs(angle) * pathDirection);
+
+    return currentPosition;
+  }
+
+  function applyFriction(forceVector, progress)
   {
-    // var maxFrictionForce = new Vector(0.5, 0);
-    // var minFrictionForce = new Vector(0.1, 0);
-    // var frictionValue = maxFrictionForce.subtract(minFrictionForce);
-    // var frictionSpeed = maxMovementSpeed;
-    // var frictionForce = Math.abs(forceVector.x / frictionSpeed);
-    // var appliedFrictionForce = new Vector(minFrictionForce.x + frictionForce * frictionValue.x, 0);
-    //
-    // appliedFrictionForce = forceVector.x > 0 ? appliedFrictionForce.multiply(-1) : appliedFrictionForce;
-    //
-    // forceVector = forceVector.add(appliedFrictionForce);
-
-    var forceSign = Math.sign(forceVector.x);
-
     var frictionFactor = (movementSpeed * 0.5) / progress;
     var frictionVector = new Vector(-1 * forceVector.x, 0);
     frictionVector = frictionVector.unit();
     forceVector = forceVector.add(frictionVector.multiply(frictionFactor));
-    //
-    // forceVector = Math.sign(forceVector) == forceSign ? forceVector : new Vector(0, 0);
 
     return forceVector;
+  }
+
+  var currentForce = new Vector(0, 0);
+
+  function getCurrentPathPosition(path, animation, animationDuration, animationPathLength)
+  {
+    var iteration = Math.floor(animation.currentTime / animationDuration);
+    var currentPosition = ((walkAnimation.currentTime / animationDuration) - iteration) * animationPathLength;
+
+    return currentPosition;
+  }
+
+  function getPathPositionVector(path, position)
+  {
+    var positionVector = new Vector(path.getPointAtLength(position).x, path.getPointAtLength(position).y);
+
+    return positionVector;
+  }
+
+  var totalForce = new Vector(0, 0);
+
+  function physics(progress)
+  {
+    // 0. TotalForce is the maintained speed
+
+    // 1. Zero force on Player this loop
+    var updateForce = new Vector(0, 0);
+    var gravityForce = new Vector(0, -9.81);
+
+    // Determine what the current path looks like
+    // Take the current point on the Path, subtract and add 1 unit (pixel) to get the smallest possible path
+    //    This should give us a new point along the path
+    //    This path has an angle and direction
+    //    Combine the new point with the current point to create a currentPath
+    var currentPosition = getCurrentPathPosition(pathWalk, walkAnimation, duration, path1Length);
+
+    var previousPositionVector = getPathPositionVector(pathWalk, currentPosition - 1);
+    var nextPositionVector = getPathPositionVector(pathWalk, currentPosition + 1);
+
+    var pathAngle = getPathAngle(previousPositionVector, nextPositionVector);
+
+    // 2. Take in User input
+    //    2.1 right => path forward
+    //    2.2 left => path backward
+    //    2.3 Input force is scaled by angle of path
+    //      2.3.1 flat path => max input force
+    //      2.3.2 vertical path => zero input force
+    var walkAngle = 1 - Math.abs(pathAngle);
+    movementForce = movementForce.multiply(walkAngle);
+    updateForce = updateForce.add(movementForce);
+
+    // Cap how fast user input can make Player go
+    // User input can only influence totalForce if it hasn't exceeded max user input force
+
+    // 3. Apply gravity
+    //    3.1 Gravity force is scaled by angle of path
+    //      3.1.1 flat path => no gravity
+    //      3.1.2 vertical path => max gravity
+    // This will make going up a slope slower and down a slope faster
+    // This will also create a falling force (gravity)
+
+    var pathDirection = Math.sign(pathAngle);
+    gravityForce.x = (gravityForce.y * Math.abs(pathAngle) * pathDirection);
+
+    updateForce = updateForce.add(gravityForce);
+
+    updateForce = updateForce.divide(progress);
+
+    totalForce = totalForce.add(updateForce);
+
+    // Apply friction tot TotalForce
+    // Friction is scaled by force, more force, more friction
+    // Friction is scaled by angle of Path
+    //    flat path => max friction
+    //    vertical path => no friction
+    var frictionAngle = 1 - Math.abs(pathAngle);
+    var frictionForce = totalForce.multiply(-1);
+
+    //frictionForce = frictionForce.unit();
+    frictionForce = frictionForce.divide(100);
+
+    //frictionForce = frictionForce.divide(20);
+    //frictionForce = frictionForce.divide(progress);
+    //frictionForce = frictionForce.multiply(frictionAngle);
+
+    totalForce = totalForce.add(frictionForce);
+
+    return totalForce;
   }
 
   function update(progress) {
     positionMouseLookVector();
 
-    if (running) {
+    totalForce = physics(progress);
+
+
+/*    if (running) {
       maxMovementSpeed = runMaxMovementSpeed;
     } else {
       maxMovementSpeed = walkMaxMovementSpeed;
@@ -422,18 +475,18 @@ window.addEventListener("load", function () {
 
     maxMovementSpeed = maxMovementSpeed / progress;
 
+    mouseMovement.x = Math.abs(mouseMovement.x) < 0.0001 ? 0 : mouseMovement.x;
     mouseMovement.x = mouseMovement.x > maxMovementSpeed ? maxMovementSpeed : mouseMovement.x;
     mouseMovement.x = mouseMovement.x < maxMovementSpeed * -1 ? maxMovementSpeed * -1 : mouseMovement.x;
 
     var updateMovementForce = movementForce.divide(progress);
 
-    mouseMovement = mouseMovement.add(updateMovementForce);
-    mouseMovement = applyFriction(mouseMovement.subtract(updateMovementForce), mouseMovement, progress);
-    mouseMovement.x = Math.abs(mouseMovement.x) < 0.0001 ? 0 : mouseMovement.x;
+    mouseMovement = mouseMovement.add(updateMovementForce);*/
 
-    if (mouseMovement.x !== 0) {
-      speedToPosition(mouseMovement);
-    }
+    var currentPosition = getCurrentPathPosition(pathWalk, walkAnimation, duration, path1Length);
+    currentPosition += totalForce.x;
+
+    updatePosition(currentPosition, progress);
 
     if (moveCameraVector.len() !== 0) {
       var partialMoveCameraVector =  new Vector(moveCameraVector.x, moveCameraVector.y);
