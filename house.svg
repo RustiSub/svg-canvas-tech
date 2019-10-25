@@ -97,7 +97,8 @@
        y1="423.33334"
        x2="337.15479"
        y2="423.33334"
-       gradientUnits="userSpaceOnUse" />
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(10,93.224276)" />
     <linearGradient
        inkscape:collect="always"
        xlink:href="#kitchen-gray"
@@ -116,7 +117,7 @@
        x2="120.65491"
        y2="456.35013"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="translate(-82.853546,46.504956)" />
+       gradientTransform="translate(-72.853546,139.72924)" />
     <linearGradient
        inkscape:collect="always"
        xlink:href="#kitchen-black"
@@ -1565,18 +1566,18 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1"
-     inkscape:cx="317.19603"
-     inkscape:cy="239.25198"
+     inkscape:zoom="0.5"
+     inkscape:cx="604.80348"
+     inkscape:cy="163.59138"
      inkscape:document-units="mm"
-     inkscape:current-layer="houseSvg"
+     inkscape:current-layer="kitchen"
      showgrid="false"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
      inkscape:window-width="1440"
-     inkscape:window-height="856"
+     inkscape:window-height="855"
      inkscape:window-x="0"
      inkscape:window-y="1"
      inkscape:window-maximized="1"
@@ -1701,11 +1702,10 @@
   <g
      id="kitchen"
      inkscape:label="kitchen"
-     transform="translate(10,93.224258)"
      class="room">
     <rect
-       y="338.66669"
-       x="0"
+       y="431.89096"
+       x="10"
        height="169.33331"
        width="340.26492"
        id="kitchen-wall"
@@ -1716,13 +1716,13 @@
        id="rect1184"
        width="340.26492"
        height="6.1740417"
-       x="0"
-       y="501.82596"
+       x="10"
+       y="595.05023"
        inkscape:label="boarding" />
     <g
        id="g1002"
        inkscape:label="door"
-       transform="translate(0,1.1036453)">
+       transform="translate(10,94.327921)">
       <path
          style="opacity:1;fill:url(#linearGradient2614);fill-opacity:1;stroke:#000000;stroke-width:3.77952766;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          d="m 50.507812,1496.877 v 421.2324 H 256.57812 V 1496.877 Z m 29.820313,25.5078 H 226.75781 v 152.1445 H 80.328125 Z"
@@ -1804,7 +1804,8 @@
     </g>
     <g
        id="g1216"
-       inkscape:label="lower">
+       inkscape:label="lower"
+       transform="translate(10,93.224276)">
       <use
          inkscape:label="kitchen.cabinet"
          transform="translate(64.216522)"
@@ -1919,7 +1920,7 @@
     <g
        id="g2461"
        inkscape:label="upper"
-       transform="translate(-17.991858,-7.2276001)"
+       transform="translate(-7.991858,85.996676)"
        style="display:inline">
       <g
          id="g2519"
@@ -1985,7 +1986,8 @@
     <g
        id="g60"
        inkscape:label="counter"
-       style="display:inline">
+       style="display:inline"
+       transform="translate(10,93.224276)">
       <g
          id="g2328"
          inkscape:label="tiles">
@@ -2008,16 +2010,47 @@
          inkscape:label="countertop" />
     </g>
     <g
-       id="paths"
-       inkscape:label="paths"
-       transform="translate(-56.753125,6.6145833)">
-      <g
-         id="path-1-group"
-         inkscape:label="path-1-group" />
+       id="path-trip-group"
+       inkscape:label="path-trip-group">
+      <path
+         style="fill:none;stroke:#001eff;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 11.509375,597.46601 H 345.94271"
+         id="path-trip"
+         inkscape:connector-curvature="0"
+         inkscape:label="path-trip"
+         sodipodi:nodetypes="cc" />
+      <path
+         style="opacity:1;vector-effect:none;fill:none;fill-opacity:1;stroke:#ff001c;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         d="M 89.241293,597.46602 V 538.44681"
+         id="path544"
+         inkscape:connector-curvature="0" />
+      <path
+         style="opacity:1;vector-effect:none;fill:none;fill-opacity:1;stroke:#001eff;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         d="M 89.241293,538.44681 H 276.88646"
+         id="path1365"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cc" />
+      <path
+         style="opacity:1;vector-effect:none;fill:none;fill-opacity:1;stroke:#ff001c;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         d="M 280.06145,468.86139 V 597.46602"
+         id="path1381"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cc" />
+      <path
+         style="opacity:1;vector-effect:none;fill:none;fill-opacity:1;stroke:#ff001c;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         d="M 147.10833,538.44681 V 466.76182"
+         id="path1397"
+         inkscape:connector-curvature="0" />
+      <path
+         style="fill:none;stroke:#001eff;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-opacity:1;font-variant-east_asian:normal;opacity:1;vector-effect:none;fill-opacity:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0"
+         d="m 152.13541,467.02641 h 123.825"
+         id="path1404"
+         inkscape:connector-curvature="0" />
     </g>
     <g
        id="g2546"
-       inkscape:label="ceiling">
+       inkscape:label="ceiling"
+       transform="translate(10,93.224276)">
       <g
          id="g2570"
          inkscape:label="lamp"
@@ -3535,20 +3568,18 @@
        d="M 745.89292,305.61216 H 4.1798387"
        style="opacity:0.53699999;vector-effect:none;fill:#483325;fill-opacity:1;stroke:#fbff00;stroke-width:7.44119644;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
   </g>
-  <path
-     style="display:inline;fill:none;stroke:#001df9;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     d="m 18.072,596.90242 34.851673,-10e-5 33.989413,-43.3051 c 0.189201,-12.28627 -2.745031,-25.17243 10.373672,-14.11739 l 52.175242,0.0731 -0.0411,-62.5645 c -1.05238,-11.13007 1.29523,-12.10934 11.47533,-9.4901 H 266.9755 c 36.11754,-36.94595 39.49556,100.76016 36.95571,129.404 l 164.64584,4e-5 c 22.7696,-8.36844 19.23634,-30.67752 -5.55625,-34.66041 l 1.93233,-12.56764 h 84.48442 c 24.98954,24.43422 9.34071,23.58064 -10.45487,23.6183 -15.52439,0.0295 -25.73493,22.99776 0.37042,23.60976 l 162.9333,5e-5 -1.449,-209.69103 -437.5274,0.74836 v 26.70256 H 18.072 Z"
-     id="path-trip"
-     inkscape:connector-curvature="0"
-     inkscape:label="path-trip"
-     sodipodi:nodetypes="cccccccccccccsccccccc" />
   <g
-     id="player-group"
-     inkscape:label="player-group">
-    <path
-       style="opacity:1;vector-effect:none;fill:#ff0a04;fill-opacity:1;stroke:none;stroke-width:0.38235301;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       d="m 121.04637,455.19238 c -0.0347,1.55353 -0.42046,3.55982 -2.01876,4.22959 -1.53534,0.36638 -2.43957,-1.42801 -2.68025,-2.67433 -0.36922,-1.94543 -0.19893,-4.50899 1.61626,-5.69088 1.41395,-0.65592 2.54838,0.98534 2.81815,2.18877 0.18136,0.63181 0.26399,1.2902 0.2646,1.94685 z"
-       id="player-shape"
-       inkscape:connector-curvature="0" />
+     id="player-wrapper"
+     inkscape:label="playerWrapper">
+    <g
+       inkscape:label="player-group"
+       id="player-group"
+       transform="translate(195.52708,46.302083)">
+      <path
+         inkscape:connector-curvature="0"
+         id="player-shape"
+         d="m 121.04637,455.19238 c -0.0347,1.55353 -0.42046,3.55982 -2.01876,4.22959 -1.53534,0.36638 -2.43957,-1.42801 -2.68025,-2.67433 -0.36922,-1.94543 -0.19893,-4.50899 1.61626,-5.69088 1.41395,-0.65592 2.54838,0.98534 2.81815,2.18877 0.18136,0.63181 0.26399,1.2902 0.2646,1.94685 z"
+         style="opacity:1;vector-effect:none;fill:#ff0a04;fill-opacity:1;stroke:none;stroke-width:0.38235301;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    </g>
   </g>
 </svg>

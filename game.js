@@ -10,7 +10,7 @@ window.addEventListener("load", function () {
   parent.attr({width: width});
   parent.attr({height: height});
 
-  var zoom = 6;
+  var zoom = 4;
   let cameraRecenterEase = 0.04;
   let deadZoneSize = width * 0.01;
   let maxMouseLookDistance = zoom * 6;
@@ -90,39 +90,52 @@ window.addEventListener("load", function () {
   }
 
   //Setup Mouse on Path
+  var pathWalkGroup = parent.select('#path-trip-group');
   var pathWalk = parent.select('#path-trip');
   var pathOffsetTest = parent.select('#path-offset-test');
   var path1Length = Snap.path.getTotalLength(pathWalk.attr("d"));
 
   var mouseAnimationLength = 10000;
 
-  var mouse = parent.select('#player-group');
+  var playerWrapper = parent.select('#player-wrapper');
+  var playerGroup = parent.select('#player-group');
   var playerShape = parent.select('#player-shape');
 
-  mouse.transform('');
+  playerGroup.transform('');
   playerShape.attr({cx: 0});
   playerShape.attr({cy: 0});
 
   var mouseLookOffsetVector = new Vector(0, 0);
-  var mouseLookCircle =  parent.circle(0, 0, 3);
 
-  var mouseVector = new Vector(mouse.getBBox().cx, mouse.getBBox().cy);
+  var mouseVector = new Vector(playerGroup.getBBox().cx, playerGroup.getBBox().cy);
   var animationOriginVector = new Vector(0, 0);
   var moveMouseVector = animationOriginVector.subtract(mouseVector);
-  mouse.transform('translate(' + moveMouseVector.x + ',' + moveMouseVector.y + ')');
+  playerGroup.transform('translate(' + moveMouseVector.x + ',' + moveMouseVector.y + ')');
 
-  //mouseLookCircle.appendTo(mouse);
+  //playerGroup.appendTo(pathWalk);
+  //playerWrapper.node.style
+
+  playerWrapper.appendTo(pathWalkGroup);
+
+  var playerWrapperPosition = new Vector(500, 0);
+  //playerWrapper.attr({transform: 'translate(' + playerWrapperPosition.x + ',' + playerWrapperPosition.y + ')'});
+
+  var mouseLookCircle =  playerWrapper.circle(0, 0, 3);
 
   var walkAnimation;
 
   let duration = 10000;
 
+
+
   function mouseWalk() {
-    mouse.node.style = 'offset-path: path("' + pathWalk.attr('d') + '")';
+    playerGroup.node.style = 'offset-path: path("' + pathWalk.attr('d') + '")';
 
     positionVector = new Vector(pathWalk.getPointAtLength(0).x, pathWalk.getPointAtLength(0).y);
 
-    walkAnimation = mouse.node.animate([
+    positionVector = applyTransform(positionVector, pathWalk.transform());
+
+    walkAnimation = playerGroup.node.animate([
       {
         offsetDistance: 0,
         offsetAnchor: '0 0'
@@ -146,15 +159,19 @@ window.addEventListener("load", function () {
   //Movement
   var mouseMovement = new Vector(0, 0);
   var movementSpeed = 10; // 10units/1000ms // 10 * 16ms / 1000ms
+  var jumpSpeed = 200; // 10units/1000ms // 10 * 16ms / 1000ms
   var walkMaxMovementSpeed = 100;
   var runMaxMovementSpeed = 150;
   var maxMovementSpeed = walkMaxMovementSpeed;
+
+  var downedKeys = {};
 
   //Physics
 
   var running = false;
 
   var movementForce = new Vector(0, 0);
+  var jumpForce = new Vector(0, 0);
 
   background.addEventListener('keydown',
       function (event) {
@@ -169,6 +186,12 @@ window.addEventListener("load", function () {
           case 68:
           case 39: //arrow right
             movementForce.x = movementSpeed;
+            break;
+          case 32: //space bar
+            if (!downedKeys[32]) {
+              jumpForce.x = jumpSpeed;
+              //downedKeys[32] = true;
+            }
             break;
         }
       }
@@ -188,6 +211,9 @@ window.addEventListener("load", function () {
           case 39: //arrow right
             movementForce.x = 0;
             break;
+          case 32:
+            downedKeys[32] = false;
+            break;
         }
       }
   );
@@ -195,8 +221,6 @@ window.addEventListener("load", function () {
   var absolutePositionVector = new Vector(0, 0);
   var relativePositionVector = new Vector(0, 0);
   var mouseLookCircleVector;
-
-  var mouseVector = new Vector(0,0);
 
   function mouseMove(event) {
     mouseVector = new Vector(
@@ -274,7 +298,8 @@ window.addEventListener("load", function () {
       return;
     }
 
-    currentPosition = currentPosition < 0 ? path1Length + currentPosition : currentPosition;
+    currentPosition = currentPosition < 0 ? 0 : currentPosition;
+    currentPosition = currentPosition > path1Length ? path1Length -1 : currentPosition;
 
     walkAnimation.currentTime = (currentPosition / path1Length) * duration;
 
@@ -299,7 +324,7 @@ window.addEventListener("load", function () {
 
     var pushDeadZone = false;
 
-    cameraZoom(zoom, cameraPos);
+    //cameraZoom(zoom, cameraPos);
 
     playerPosition = new Vector(
         pathWalk.getPointAtLength(currentPosition).x - (width / zoom / 2),
@@ -311,16 +336,7 @@ window.addEventListener("load", function () {
     }
   }
 
-  function moveCamera(pos)
-  {
-    var pathPosition = pos * path1Length;
-
-    var cameraVector = new Vector(pathWalk.getPointAtLength(pathPosition).x, pathWalk.getPointAtLength(pathPosition).y);
-
-    cameraZoom(zoom, cameraVector);
-  }
-
-  cameraZoom(zoom, absoluteOrigin.add(new Vector(0, 550)));
+  //cameraZoom(zoom, absoluteOrigin.add(new Vector(0, 550)));
 
   /**
    * Vector needs to be positioned to the player shape
@@ -349,31 +365,10 @@ window.addEventListener("load", function () {
 
     angle = isNaN(angle) ? 0 : angle;
 
+    angle = Math.round(angle * 100000) / 100000;
+
     return angle;
   }
-
-  var gravityForceVector = new Vector(0, 4);
-
-  function applyGravity(angle, currentPosition, speed, progress) {
-    var previousPosition = currentPosition - speed.x;
-
-    var pathDirection = Math.sign(angle) * Math.sign(currentPosition - previousPosition);
-    currentPosition -= (gravityForceVector.y * Math.abs(angle) * pathDirection);
-
-    return currentPosition;
-  }
-
-  function applyFriction(forceVector, progress)
-  {
-    var frictionFactor = (movementSpeed * 0.5) / progress;
-    var frictionVector = new Vector(-1 * forceVector.x, 0);
-    frictionVector = frictionVector.unit();
-    forceVector = forceVector.add(frictionVector.multiply(frictionFactor));
-
-    return forceVector;
-  }
-
-  var currentForce = new Vector(0, 0);
 
   function getCurrentPathPosition(path, animation, animationDuration, animationPathLength)
   {
@@ -391,6 +386,7 @@ window.addEventListener("load", function () {
   }
 
   var totalForce = new Vector(0, 0);
+  var currentAngle = 0;
 
   function physics(progress)
   {
@@ -407,8 +403,8 @@ window.addEventListener("load", function () {
     //    Combine the new point with the current point to create a currentPath
     var currentPosition = getCurrentPathPosition(pathWalk, walkAnimation, duration, path1Length);
 
-    var previousPositionVector = getPathPositionVector(pathWalk, currentPosition - 1);
-    var nextPositionVector = getPathPositionVector(pathWalk, currentPosition + 1);
+    var previousPositionVector = getPathPositionVector(pathWalk, currentPosition - (1 / progress));
+    var nextPositionVector = getPathPositionVector(pathWalk, currentPosition + (1 / progress));
 
     var pathAngle = getPathAngle(previousPositionVector, nextPositionVector);
 
@@ -441,6 +437,15 @@ window.addEventListener("load", function () {
 
     totalForce = totalForce.add(updateForce);
 
+    // Take in User Jump Input
+    var jumpAngle = pathAngle;
+    jumpForce = jumpForce.multiply(jumpAngle);
+    jumpForce = jumpForce.divide(progress);
+
+    totalForce = totalForce.add(jumpForce);
+
+    jumpForce = new Vector(0, 0);
+
     // Apply friction tot TotalForce
     // Friction is scaled by force, more force, more friction
     // Friction is scaled by angle of Path
@@ -449,14 +454,22 @@ window.addEventListener("load", function () {
     var frictionAngle = 1 - Math.abs(pathAngle);
     var frictionForce = totalForce.multiply(-1);
 
-    //frictionForce = frictionForce.unit();
-    frictionForce = frictionForce.divide(100);
+    frictionForce = frictionForce.divide(10);
+    frictionForce = frictionForce.multiply(frictionAngle);
 
-    //frictionForce = frictionForce.divide(20);
-    //frictionForce = frictionForce.divide(progress);
-    //frictionForce = frictionForce.multiply(frictionAngle);
+    //totalForce = totalForce.add(frictionForce);
 
-    totalForce = totalForce.add(frictionForce);
+    //When path changes direction, scale down the total force
+    // Direction change of >= 1 (sin) => 100% speed reduction
+
+    var directionChangedAngle = Math.abs(pathAngle - currentAngle);
+    directionChangedAngle = directionChangedAngle > 1 ? 1 : directionChangedAngle;
+    directionChangedAngle = 1 - directionChangedAngle;
+
+    //totalForce = totalForce.multiply(directionChangedAngle);
+
+    currentAngle = pathAngle;
+
 
     return totalForce;
   }
@@ -465,7 +478,6 @@ window.addEventListener("load", function () {
     positionMouseLookVector();
 
     totalForce = physics(progress);
-
 
 /*    if (running) {
       maxMovementSpeed = runMaxMovementSpeed;
